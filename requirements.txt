@@ -1,0 +1,31 @@
+# ==============================================================================
+# Smart Parking Finder & Management System - Dependencies
+# Python 3.10+
+# ==============================================================================
+
+# Backend Framework & ASGI Server
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+
+# Database & ORM
+sqlalchemy>=2.0.25
+pymysql>=1.1.0
+cryptography>=42.0.0
+
+# Data Validation & Configuration
+pydantic>=2.6.0
+pydantic-settings>=2.1.0
+email-validator>=2.1.0
+python-dotenv>=1.0.1
+
+# Security & Authentication
+bcrypt>=4.1.2
+pyjwt>=2.8.0
+python-multipart>=0.0.9
+
+# Frontend (for Phase 5)
+streamlit>=1.31.0
+requests>=2.31.0
+
+# Geolocation & Distance Calculation
+geopy>=2.4.1
