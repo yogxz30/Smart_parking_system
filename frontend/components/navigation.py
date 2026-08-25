@@ -88,6 +88,9 @@ def render_sidebar(current_user: Optional[Dict[str, Any]] = None):
             "my_bookings": ("📅 My Bookings", "my_bookings"),
             "profile": ("👤 User Profile", "profile")
         }
+        role = str(current_user.get("role", "user")).lower() if current_user else "user"
+        if role in {"manager", "admin"}:
+            pages["parking_management"] = ("🅿️ Parking Management", "parking_management")
 
         # Determine current active page
         current_page = st.session_state.get("active_page", "dashboard")

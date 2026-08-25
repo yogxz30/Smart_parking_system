@@ -101,6 +101,7 @@ CREATE TABLE IF NOT EXISTS parking_sessions (
     check_in DATETIME,
     check_out DATETIME,
     status ENUM('active', 'completed') DEFAULT 'active',
+    CONSTRAINT uq_sessions_booking UNIQUE (booking_id),
     CONSTRAINT fk_sessions_booking FOREIGN KEY (booking_id) 
         REFERENCES bookings(booking_id) 
         ON DELETE CASCADE ON UPDATE CASCADE,

@@ -155,6 +155,58 @@ class APIClient:
             return {"success": False, "error": f"Connection error: {str(e)}"}
 
     # =========================================================================
+    # Manager Parking Operations
+    # =========================================================================
+    def get_managed_parking_locations(self, token: str) -> Dict[str, Any]:
+        try:
+            resp = requests.get(f"{self.base_url}/api/parking/management/all", headers=self._get_headers(token), timeout=8)
+            return self._handle_response(resp)
+        except Exception as e:
+            return {"success": False, "error": f"Connection error: {str(e)}"}
+
+    def create_parking_location(self, token: str, payload: Dict[str, Any]) -> Dict[str, Any]:
+        try:
+            resp = requests.post(f"{self.base_url}/api/parking", json=payload, headers=self._get_headers(token), timeout=8)
+            return self._handle_response(resp)
+        except Exception as e:
+            return {"success": False, "error": f"Connection error: {str(e)}"}
+
+    def update_parking_location(self, token: str, parking_id: int, payload: Dict[str, Any]) -> Dict[str, Any]:
+        try:
+            resp = requests.put(f"{self.base_url}/api/parking/{parking_id}", json=payload, headers=self._get_headers(token), timeout=8)
+            return self._handle_response(resp)
+        except Exception as e:
+            return {"success": False, "error": f"Connection error: {str(e)}"}
+
+    def set_parking_active_status(self, token: str, parking_id: int, is_active: bool) -> Dict[str, Any]:
+        try:
+            resp = requests.put(f"{self.base_url}/api/parking/{parking_id}/status", json={"is_active": is_active}, headers=self._get_headers(token), timeout=8)
+            return self._handle_response(resp)
+        except Exception as e:
+            return {"success": False, "error": f"Connection error: {str(e)}"}
+
+    def create_slot(self, token: str, parking_id: int, slot_number: str, slot_type: str) -> Dict[str, Any]:
+        try:
+            resp = requests.post(f"{self.base_url}/api/slots", json={"parking_id": parking_id, "slot_number": slot_number, "slot_type": slot_type}, headers=self._get_headers(token), timeout=8)
+            return self._handle_response(resp)
+        except Exception as e:
+            return {"success": False, "error": f"Connection error: {str(e)}"}
+
+    def update_slot_status(self, token: str, slot_id: int, new_status: str) -> Dict[str, Any]:
+        try:
+            resp = requests.put(f"{self.base_url}/api/slots/{slot_id}/status", json={"status": new_status}, headers=self._get_headers(token), timeout=8)
+            return self._handle_response(resp)
+        except Exception as e:
+            return {"success": False, "error": f"Connection error: {str(e)}"}
+
+    def get_all_active_sessions(self, token: str) -> Dict[str, Any]:
+        try:
+            resp = requests.get(f"{self.base_url}/api/sessions/all", headers=self._get_headers(token), timeout=8)
+            return self._handle_response(resp)
+        except Exception as e:
+            return {"success": False, "error": f"Connection error: {str(e)}"}
+
+    # =========================================================================
     # Bookings & Sessions
     # =========================================================================
     def create_booking(

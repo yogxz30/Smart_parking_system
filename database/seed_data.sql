@@ -166,3 +166,8 @@ INSERT INTO parking_slots (parking_id, slot_number, slot_type, status) VALUES
 (10, 'PMC-09', 'normal', 'available'),
 (10, 'PMC-10', 'normal', 'available')
 ON DUPLICATE KEY UPDATE slot_type=VALUES(slot_type);
+
+SHOW CREATE TABLE parking_sessions;
+SELECT parking_name,parking_fee FROM parking_locations;
+select count(*) from parking_sessions;
+SHOW COLUMNS FROM parking_locations;

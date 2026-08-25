@@ -212,7 +212,8 @@ def render_parking_search():
                 f'{loc.get("opening_time", "06:00:00")} - {loc.get("closing_time", "23:00:00")}'
                 ' &nbsp;|&nbsp; '
                 '🏷️ <strong>Status:</strong> '
-                '<span style="color:#34d399;font-weight:700;">Active</span>'
+                f'<span style="color:{"#34d399" if str(loc.get("status", "")).lower() == "active" or loc.get("is_active") is True else "#f59e0b"};font-weight:700;">'
+                f'{loc.get("status") if loc.get("status") is not None else ("active" if loc.get("is_active") is True else ("inactive" if loc.get("is_active") is False else "unknown"))}</span>'
                 '</div>'
             )
             st.markdown(hours_html, unsafe_allow_html=True)
@@ -240,7 +241,8 @@ def render_parking_search():
                                 s_id = slot.get("slot_id")
                                 s_num = slot.get("slot_number")
                                 s_type = slot.get("slot_type", "normal").lower()
-                                s_status = slot.get("status", "available").lower()
+                                raw_status = slot.get("status")
+                                s_status = str(raw_status).lower() if raw_status is not None else "unknown"
 
                                 type_icon = "⚡" if s_type == "ev" else ("♿" if s_type == "accessible" else "🚗")
                                 is_available = (s_status == "available")
