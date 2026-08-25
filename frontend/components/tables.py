@@ -31,7 +31,7 @@ def render_booking_card(
     status = str(booking.get("status", "reserved")).lower()
 
     status_styles = {
-        "reserved": ("#fbbf24", "rgba(245, 158, 11, 0.2)", "🟡 Reserved (Awaiting Arrival)"),
+        "reserved": ("#fbbf24", "rgba(245, 158, 11, 0.2)", "🟡 Reserved"),
         "active": ("#60a5fa", "rgba(59, 130, 246, 0.2)", "⚡ Active (Parked)"),
         "completed": ("#34d399", "rgba(16, 185, 129, 0.2)", "✅ Completed"),
         "cancelled": ("#f87171", "rgba(239, 68, 68, 0.2)", "❌ Cancelled")
@@ -39,60 +39,42 @@ def render_booking_card(
 
     color, bg, status_text = status_styles.get(status, ("#94a3b8", "rgba(148, 163, 184, 0.2)", status.capitalize()))
 
-    raw_html = f"""
-<div style="
-    background: rgba(30, 41, 59, 0.85);
-    border: 1px solid rgba(148, 163, 184, 0.25);
-    border-left: 4px solid {color};
-    border-radius: 12px;
-    padding: 18px 22px;
-    margin-bottom: 14px;
-">
-    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px;">
-        <div>
-            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
-                <span style="font-size: 1.2rem; font-weight: 800; color: #ffffff;">
-                    {booking.get('parking_name', 'Parking Facility')}
-                </span>
-                <span style="
-                    background: rgba(99, 102, 241, 0.25);
-                    color: #c7d2fe;
-                    border: 1px solid rgba(99, 102, 241, 0.5);
-                    padding: 2px 10px;
-                    border-radius: 6px;
-                    font-size: 0.8rem;
-                    font-weight: 700;
-                ">
-                    Booking #{b_id}
-                </span>
-            </div>
-            <p style="color: #cbd5e1; font-size: 0.9rem; margin: 0 0 8px 0;">
-                📍 Area: <strong style="color: #ffffff;">{booking.get('area', 'N/A')}</strong> &nbsp;|&nbsp; 
-                Slot: <strong style="color: #60a5fa; font-size: 1rem;">{booking.get('slot_number', 'N/A')}</strong> ({str(booking.get('slot_type', 'normal')).upper()})
-            </p>
-            <p style="color: #cbd5e1; font-size: 0.88rem; margin: 0;">
-                🕒 <strong>From:</strong> {format_dt(booking.get('start_time'))} &nbsp; 
-                <strong>To:</strong> {format_dt(booking.get('end_time'))}
-            </p>
-        </div>
-        <div>
-            <span style="
-                background: {bg};
-                color: {color};
-                border: 1px solid {color}80;
-                padding: 6px 14px;
-                border-radius: 8px;
-                font-weight: 800;
-                font-size: 0.9rem;
-                display: inline-block;
-            ">
-                {status_text}
-            </span>
-        </div>
-    </div>
-</div>
-"""
-    st.markdown(textwrap.dedent(raw_html).strip(), unsafe_allow_html=True)
+    card_html = (
+        '<div style="background:rgba(30,41,59,0.85);border:1px solid rgba(148,163,184,0.25);'
+        'border-left:4px solid {color};border-radius:12px;padding:18px 22px;margin-bottom:12px;'
+        'box-shadow:0 4px 12px rgba(0,0,0,0.15);">'
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;">'
+        '<div style="min-width:0;flex:1 1 240px;">'
+        '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap;">'
+        '<span style="font-size:1.15rem;font-weight:800;color:#ffffff;">{parking_name}</span>'
+        '<span style="background:rgba(99,102,241,0.25);color:#c7d2fe;border:1px solid rgba(99,102,241,0.5);'
+        'padding:2px 10px;border-radius:6px;font-size:0.78rem;font-weight:700;">Booking #{b_id}</span>'
+        '</div>'
+        '<p style="color:#cbd5e1;font-size:0.88rem;margin:0 0 6px 0;">'
+        '📍 Area: <strong style="color:#ffffff;">{area}</strong> &nbsp;|&nbsp; '
+        'Slot: <strong style="color:#60a5fa;font-size:0.95rem;">{slot_num}</strong> '
+        '<span style="color:#94a3b8;font-size:0.8rem;">({slot_type})</span>'
+        '</p>'
+        '<p style="color:#94a3b8;font-size:0.84rem;margin:0;">'
+        '🕒 <strong>From:</strong> <span style="color:#cbd5e1;">{start_dt}</span> &nbsp;|&nbsp; '
+        '<strong>To:</strong> <span style="color:#cbd5e1;">{end_dt}</span>'
+        '</p>'
+        '</div>'
+        '<div style="flex:0 0 auto;">'
+        '<span style="background:{bg};color:{color};border:1px solid {color}80;padding:6px 14px;'
+        'border-radius:8px;font-weight:800;font-size:0.88rem;display:inline-block;">{status_text}</span>'
+        '</div>'
+        '</div></div>'
+    ).format(
+        color=color, bg=bg, parking_name=booking.get('parking_name', 'Parking Facility'),
+        b_id=b_id, area=booking.get('area', 'N/A'),
+        slot_num=booking.get('slot_number', 'N/A'),
+        slot_type=str(booking.get('slot_type', 'normal')).upper(),
+        start_dt=format_dt(booking.get('start_time')),
+        end_dt=format_dt(booking.get('end_time')),
+        status_text=status_text
+    )
+    st.markdown(card_html, unsafe_allow_html=True)
 
     # Action Buttons Row
     if status in ["reserved", "active"]:
@@ -124,38 +106,28 @@ def render_sessions_table(sessions: List[Dict[str, Any]]):
         badge_color = "#60a5fa" if status == "active" else "#34d399"
         badge_text = "⚡ In Progress" if status == "active" else "✅ Completed"
 
-        raw_html = f"""
-<div style="
-    background: rgba(15, 23, 42, 0.75);
-    border: 1px solid rgba(148, 163, 184, 0.2);
-    border-radius: 10px;
-    padding: 16px 20px;
-    margin-bottom: 12px;
-">
-    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-        <div>
-            <strong style="color: #ffffff; font-size: 1.05rem;">
-                {s.get('parking_name', 'Parking Facility')} • Slot {s.get('slot_number', 'N/A')}
-            </strong>
-            <div style="color: #cbd5e1; font-size: 0.85rem; margin-top: 6px;">
-                📥 <strong>Check-in:</strong> {format_dt(s.get('check_in'))} &nbsp;|&nbsp; 
-                📤 <strong>Check-out:</strong> {format_dt(s.get('check_out'))}
-            </div>
-        </div>
-        <div>
-            <span style="
-                background: {badge_color}25;
-                color: {badge_color};
-                border: 1px solid {badge_color}70;
-                padding: 4px 12px;
-                border-radius: 6px;
-                font-size: 0.8rem;
-                font-weight: 800;
-            ">
-                {badge_text}
-            </span>
-        </div>
-    </div>
-</div>
-"""
-        st.markdown(textwrap.dedent(raw_html).strip(), unsafe_allow_html=True)
+        session_html = (
+            '<div style="background:rgba(15,23,42,0.75);border:1px solid rgba(148,163,184,0.2);'
+            'border-radius:10px;padding:16px 20px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,0.15);">'
+            '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">'
+            '<div>'
+            '<strong style="color:#ffffff;font-size:1.05rem;">{name} • Slot {slot}</strong>'
+            '<div style="color:#cbd5e1;font-size:0.85rem;margin-top:6px;">'
+            '📥 <strong>Check-in:</strong> {check_in} &nbsp;|&nbsp; '
+            '📤 <strong>Check-out:</strong> {check_out}'
+            '</div>'
+            '</div>'
+            '<div>'
+            '<span style="background:{color}25;color:{color};border:1px solid {color}70;'
+            'padding:4px 12px;border-radius:6px;font-size:0.8rem;font-weight:800;">{badge_text}</span>'
+            '</div>'
+            '</div></div>'
+        ).format(
+            name=s.get('parking_name', 'Parking Facility'),
+            slot=s.get('slot_number', 'N/A'),
+            check_in=format_dt(s.get('check_in')),
+            check_out=format_dt(s.get('check_out')),
+            color=badge_color,
+            badge_text=badge_text
+        )
+        st.markdown(session_html, unsafe_allow_html=True)

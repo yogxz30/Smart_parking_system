@@ -13,31 +13,19 @@ def render_login_page():
 
     with col_center:
         # Header Branding
-        header_html = """
-<div style="text-align: center; margin-bottom: 28px; padding-top: 10px;">
-    <div style="
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 68px;
-        height: 68px;
-        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-        border-radius: 20px;
-        box-shadow: 0 8px 24px rgba(59, 130, 246, 0.45);
-        font-size: 2.4rem;
-        margin-bottom: 12px;
-    ">
-        🅿️
-    </div>
-    <h1 style="color: #ffffff; font-size: 2rem; font-weight: 800; margin: 0; letter-spacing: -0.5px;">
-        Smart Parking Finder
-    </h1>
-    <p style="color: #cbd5e1; font-size: 0.95rem; font-weight: 500; margin-top: 6px;">
-        Find available parking in Chennai & reserve your slot instantly.
-    </p>
-</div>
-"""
-        st.markdown(textwrap.dedent(header_html).strip(), unsafe_allow_html=True)
+        header_html = (
+            '<div style="text-align:center;margin-bottom:28px;padding-top:10px;">'
+            '<div style="display:inline-flex;align-items:center;justify-content:center;'
+            'width:68px;height:68px;background:linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);'
+            'border-radius:20px;box-shadow:0 8px 24px rgba(59,130,246,0.45);'
+            'font-size:2.4rem;margin-bottom:12px;">🅿️</div>'
+            '<h1 style="color:#ffffff;font-size:2rem;font-weight:800;margin:0;letter-spacing:-0.5px;">'
+            'Smart Parking Finder</h1>'
+            '<p style="color:#cbd5e1;font-size:0.95rem;font-weight:500;margin-top:6px;">'
+            'Find available parking in Chennai & reserve your slot instantly.'
+            '</p></div>'
+        )
+        st.markdown(header_html, unsafe_allow_html=True)
 
         tab_login, tab_register = st.tabs(["🔐 Sign In", "✨ Create Account"])
 
@@ -71,21 +59,15 @@ def render_login_page():
                                 st.error(f"❌ {result.get('error', 'Login failed.')}")
 
             # Demo Quick Login Card
-            demo_box_html = """
-<div style="
-    background: rgba(30, 41, 59, 0.8);
-    border: 1px solid rgba(148, 163, 184, 0.25);
-    border-radius: 10px;
-    padding: 14px;
-    margin-top: 22px;
-    text-align: center;
-">
-    <p style="color: #cbd5e1; font-size: 0.85rem; font-weight: 600; margin: 0 0 8px 0;">
-        ⚡ Instant Demo Access (Password: <code style="color: #60a5fa; background: rgba(59, 130, 246, 0.15); padding: 2px 6px; border-radius: 4px;">password123</code>):
-    </p>
-</div>
-"""
-            st.markdown(textwrap.dedent(demo_box_html).strip(), unsafe_allow_html=True)
+            demo_box_html = (
+                '<div style="background:rgba(30,41,59,0.8);border:1px solid rgba(148,163,184,0.25);'
+                'border-radius:10px;padding:14px;margin-top:22px;text-align:center;">'
+                '<p style="color:#cbd5e1;font-size:0.85rem;font-weight:600;margin:0 0 8px 0;">'
+                '⚡ Instant Demo Access (Password: <code style="color:#60a5fa;background:rgba(59,130,246,0.15);'
+                'padding:2px 6px;border-radius:4px;font-weight:700;">password123</code>):</p>'
+                '</div>'
+            )
+            st.markdown(demo_box_html, unsafe_allow_html=True)
 
             demo_cols = st.columns(2)
             with demo_cols[0]:

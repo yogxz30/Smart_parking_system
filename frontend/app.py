@@ -41,7 +41,7 @@ CUSTOM_CSS = """
 
     /* Main background styling */
     .stApp {
-        background: radial-gradient(circle at 50% 0%, #1e293b 0%, #0f172a 60%, #020617 100%);
+        background: radial-gradient(circle at 50% 0%, #1e293b 0%, #0f172a 55%, #020617 100%);
         color: #f8fafc;
     }
 
@@ -56,12 +56,14 @@ CUSTOM_CSS = """
         border-right: 1px solid rgba(148, 163, 184, 0.15) !important;
     }
 
-    /* High-contrast Label Styling */
+    /* High-contrast Form Label Styling */
     .stTextInput > label, 
     .stSelectbox > label, 
     .stDateInput > label, 
     .stTimeInput > label,
-    .stSlider > label {
+    .stSlider > label,
+    .stNumberInput > label,
+    .stRadio > label {
         color: #f1f5f9 !important;
         font-weight: 700 !important;
         font-size: 0.92rem !important;
@@ -69,13 +71,14 @@ CUSTOM_CSS = """
         margin-bottom: 4px !important;
     }
 
-    /* Inputs, Selects, and Textboxes */
+    /* Inputs, Selects, NumberInputs and Textboxes */
     .stTextInput > div > div > input, 
     .stSelectbox > div > div > div, 
     .stDateInput > div > div > input, 
-    .stTimeInput > div > div > input {
+    .stTimeInput > div > div > input,
+    .stNumberInput > div > div > input {
         background-color: rgba(30, 41, 59, 0.9) !important;
-        border: 1px solid #475569 !important;
+        border: 1px solid rgba(148, 163, 184, 0.3) !important;
         border-radius: 10px !important;
         color: #ffffff !important;
         font-weight: 500 !important;
@@ -87,13 +90,15 @@ CUSTOM_CSS = """
     }
 
     .stTextInput > div > div > input:focus, 
-    .stSelectbox > div > div > div:focus {
+    .stSelectbox > div > div > div:focus,
+    .stNumberInput > div > div > input:focus {
         border-color: #3b82f6 !important;
         box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4) !important;
     }
 
     /* Button Styling */
-    .stButton > button {
+    .stButton > button,
+    .stDownloadButton > button {
         border-radius: 10px !important;
         font-weight: 700 !important;
         letter-spacing: 0.3px !important;
@@ -103,23 +108,55 @@ CUSTOM_CSS = """
         background-color: rgba(30, 41, 59, 0.8) !important;
     }
 
-    .stButton > button:hover {
+    .stButton > button:hover,
+    .stDownloadButton > button:hover {
         transform: translateY(-1px) !important;
         box-shadow: 0 4px 14px rgba(59, 130, 246, 0.3) !important;
         border-color: #3b82f6 !important;
+        background-color: rgba(51, 65, 85, 0.9) !important;
     }
 
     /* Primary Button Gradient */
-    .stButton > button[kind="primary"] {
+    .stButton > button[kind="primary"],
+    .stDownloadButton > button[kind="primary"] {
         background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
         border: none !important;
         color: #ffffff !important;
         box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4) !important;
     }
 
-    .stButton > button[kind="primary"]:hover {
+    .stButton > button[kind="primary"]:hover,
+    .stDownloadButton > button[kind="primary"]:hover {
         background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%) !important;
         box-shadow: 0 6px 20px rgba(59, 130, 246, 0.55) !important;
+    }
+
+    /* Streamlit Built-in Metric Cards Styling */
+    [data-testid="stMetric"] {
+        background: rgba(30, 41, 59, 0.8) !important;
+        border: 1px solid rgba(148, 163, 184, 0.22) !important;
+        border-radius: 12px !important;
+        padding: 14px 18px !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+    }
+
+    [data-testid="stMetricLabel"] {
+        color: #cbd5e1 !important;
+        font-weight: 700 !important;
+        font-size: 0.85rem !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+    }
+
+    [data-testid="stMetricValue"] {
+        color: #ffffff !important;
+        font-weight: 800 !important;
+        font-size: 1.85rem !important;
+    }
+
+    [data-testid="stMetricDelta"] {
+        font-weight: 700 !important;
+        font-size: 0.82rem !important;
     }
 
     /* Expander Container */
@@ -129,7 +166,7 @@ CUSTOM_CSS = """
         border: 1px solid rgba(148, 163, 184, 0.2) !important;
         color: #ffffff !important;
         font-weight: 700 !important;
-        font-size: 1rem !important;
+        font-size: 0.98rem !important;
     }
 
     .streamlit-expanderContent {
@@ -153,13 +190,28 @@ CUSTOM_CSS = """
         color: #cbd5e1 !important;
         font-weight: 700 !important;
         font-size: 0.92rem !important;
-        padding: 10px 20px !important;
+        padding: 10px 18px !important;
     }
 
     .stTabs [aria-selected="true"] {
         background-color: rgba(59, 130, 246, 0.25) !important;
         border-color: #3b82f6 !important;
         color: #ffffff !important;
+    }
+
+    /* Dataframe Table Dark Theme Polish */
+    [data-testid="stDataFrame"] {
+        background-color: rgba(15, 23, 42, 0.8) !important;
+        border: 1px solid rgba(148, 163, 184, 0.2) !important;
+        border-radius: 10px !important;
+        overflow: hidden !important;
+    }
+
+    /* Alert Boxes (Info, Warning, Error, Success) */
+    .stAlert {
+        border-radius: 10px !important;
+        border-width: 1px !important;
+        font-weight: 500 !important;
     }
 
     /* Custom Scrollbars */

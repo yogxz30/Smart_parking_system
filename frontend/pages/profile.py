@@ -54,45 +54,48 @@ def render_user_profile():
     with col1:
         initial = user.get("name", "U")[0].upper()
         name_val = user.get("name", "")
-        role_val = user.get("role", "user")
+        role_val = str(user.get("role", "user")).upper()
         email_val = user.get("email", "")
         phone_val = user.get("phone") or "Not provided"
         status_val = user.get("status", "active")
         created_val = format_dt(user.get("created_at"))
 
+        role_color = "#38bdf8" if role_val == "ADMIN" else ("#a78bfa" if role_val == "MANAGER" else "#34d399")
+        role_bg = "rgba(56, 189, 248, 0.18)" if role_val == "ADMIN" else ("rgba(167, 139, 250, 0.18)" if role_val == "MANAGER" else "rgba(52, 211, 153, 0.18)")
+
         user_card_html = (
             '<div style="background:rgba(30,41,59,0.85);border:1px solid rgba(148,163,184,0.25);'
-            'border-radius:12px;padding:24px;margin-bottom:20px;">'
+            'border-radius:12px;padding:24px;margin-bottom:20px;box-shadow:0 4px 14px rgba(0,0,0,0.2);">'
             '<div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;">'
             '<div style="width:56px;height:56px;border-radius:50%;'
             'background:linear-gradient(135deg,#3b82f6 0%,#1d4ed8 100%);color:#ffffff;'
             'display:flex;align-items:center;justify-content:center;'
-            'font-weight:800;font-size:1.6rem;">{initial}</div>'
+            'font-weight:800;font-size:1.6rem;box-shadow:0 4px 12px rgba(59,130,246,0.4);">{initial}</div>'
             '<div>'
-            '<h2 style="color:#ffffff;font-size:1.4rem;font-weight:700;margin:0;">{name}</h2>'
-            '<span style="background:rgba(16,185,129,0.25);color:#6ee7b7;'
-            'border:1px solid rgba(16,185,129,0.5);padding:2px 10px;border-radius:6px;'
-            'font-size:0.8rem;font-weight:700;text-transform:uppercase;'
-            'display:inline-block;margin-top:4px;">{role} Account</span>'
+            '<h2 style="color:#ffffff;font-size:1.35rem;font-weight:800;margin:0;">{name}</h2>'
+            '<span style="background:{role_bg};color:{role_color};'
+            'border:1px solid {role_color}60;padding:2px 10px;border-radius:6px;'
+            'font-size:0.78rem;font-weight:700;text-transform:uppercase;'
+            'display:inline-block;margin-top:5px;">{role} Account</span>'
             '</div></div>'
             '<div style="margin-bottom:14px;">'
             '<p style="color:#94a3b8;font-size:0.82rem;font-weight:600;margin:0 0 2px 0;">Email Address</p>'
-            '<strong style="color:#ffffff;font-size:1.05rem;">{email}</strong>'
+            '<strong style="color:#ffffff;font-size:1.02rem;">{email}</strong>'
             '</div>'
             '<div style="margin-bottom:14px;">'
             '<p style="color:#94a3b8;font-size:0.82rem;font-weight:600;margin:0 0 2px 0;">Phone Number</p>'
-            '<strong style="color:#ffffff;font-size:1.05rem;">{phone}</strong>'
+            '<strong style="color:#ffffff;font-size:1.02rem;">{phone}</strong>'
             '</div>'
             '<div style="margin-bottom:14px;">'
             '<p style="color:#94a3b8;font-size:0.82rem;font-weight:600;margin:0 0 2px 0;">Account Status</p>'
-            '<strong style="color:#34d399;font-size:1.05rem;text-transform:capitalize;">{status}</strong>'
+            '<strong style="color:#34d399;font-size:1.02rem;text-transform:capitalize;">{status}</strong>'
             '</div>'
             '<div>'
             '<p style="color:#94a3b8;font-size:0.82rem;font-weight:600;margin:0 0 2px 0;">Member Since</p>'
-            '<strong style="color:#cbd5e1;font-size:0.95rem;">{created}</strong>'
+            '<strong style="color:#cbd5e1;font-size:0.92rem;">{created}</strong>'
             '</div></div>'
         ).format(
-            initial=initial, name=name_val, role=role_val,
+            initial=initial, name=name_val, role=role_val, role_color=role_color, role_bg=role_bg,
             email=email_val, phone=phone_val, status=status_val, created=created_val
         )
         st.markdown(user_card_html, unsafe_allow_html=True)
@@ -103,7 +106,7 @@ def render_user_profile():
     with col2:
         activity_card_html = (
             '<div style="background:rgba(15,23,42,0.85);border:1px solid rgba(148,163,184,0.25);'
-            'border-radius:12px;padding:24px;text-align:center;margin-bottom:20px;">'
+            'border-radius:12px;padding:24px;text-align:center;margin-bottom:20px;box-shadow:0 4px 14px rgba(0,0,0,0.2);">'
             '<h3 style="color:#ffffff;font-size:1.2rem;font-weight:800;margin:0 0 16px 0;">'
             '📊 Activity Overview</h3>'
             '<div style="background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.4);'
