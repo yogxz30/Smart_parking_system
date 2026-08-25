@@ -40,37 +40,42 @@ def render_sidebar(current_user: Optional[Dict[str, Any]] = None):
 
         # Authenticated User Info Card
         if current_user:
-            role_label = current_user.get("role", "user").upper()
+            role_label = str(current_user.get("role", "user")).upper()
+            role_color = "#38bdf8" if role_label == "ADMIN" else ("#a78bfa" if role_label == "MANAGER" else "#34d399")
+            role_bg = "rgba(56, 189, 248, 0.18)" if role_label == "ADMIN" else ("rgba(167, 139, 250, 0.18)" if role_label == "MANAGER" else "rgba(52, 211, 153, 0.18)")
             st.markdown(
                 f"""
                 <div style="
-                    background: rgba(30, 41, 59, 0.7);
-                    border: 1px solid rgba(148, 163, 184, 0.2);
-                    border-radius: 10px;
+                    background: rgba(30, 41, 59, 0.75);
+                    border: 1px solid rgba(148, 163, 184, 0.22);
+                    border-radius: 12px;
                     padding: 12px 14px;
                     margin-bottom: 20px;
                 ">
                     <div style="display: flex; align-items: center; gap: 10px;">
                         <div style="
-                            width: 38px;
-                            height: 38px;
+                            width: 40px;
+                            height: 40px;
                             border-radius: 50%;
-                            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+                            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
                             color: #ffffff;
                             display: flex;
                             align-items: center;
                             justify-content: center;
-                            font-weight: 700;
-                            font-size: 1rem;
+                            font-weight: 800;
+                            font-size: 1.05rem;
+                            flex-shrink: 0;
                         ">
                             {current_user.get('name', 'U')[0].upper()}
                         </div>
-                        <div style="overflow: hidden;">
-                            <div style="color: #f1f5f9; font-weight: 600; font-size: 0.9rem; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+                        <div style="overflow: hidden; flex: 1;">
+                            <div style="color: #f1f5f9; font-weight: 700; font-size: 0.92rem; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                 {current_user.get('name', 'User')}
                             </div>
-                            <div style="color: #94a3b8; font-size: 0.75rem; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
-                                {current_user.get('email', '')}
+                            <div style="display: flex; align-items: center; gap: 6px; margin-top: 2px;">
+                                <span style="background: {role_bg}; color: {role_color}; border: 1px solid {role_color}50; padding: 1px 7px; border-radius: 5px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase;">
+                                    {role_label}
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -80,7 +85,7 @@ def render_sidebar(current_user: Optional[Dict[str, Any]] = None):
             )
 
         # Navigation Options
-        st.markdown("<p style='color: #64748b; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;'>Navigation</p>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #64748b; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px;'>Navigation</p>", unsafe_allow_html=True)
         
         pages = {
             "dashboard": ("🏠 User Dashboard", "dashboard"),

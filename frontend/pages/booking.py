@@ -51,7 +51,7 @@ def render_booking_flow():
     with col_left:
         facility_card_html = (
             '<div style="background:rgba(30,41,59,0.85);border:1px solid rgba(148,163,184,0.25);'
-            'border-radius:12px;padding:20px;margin-bottom:15px;">'
+            'border-radius:12px;padding:20px;margin-bottom:15px;box-shadow:0 4px 14px rgba(0,0,0,0.2);">'
             '<p style="color:#60a5fa;font-size:0.8rem;font-weight:800;text-transform:uppercase;'
             'letter-spacing:1px;margin:0 0 6px 0;">Selected Facility</p>'
             '<h3 style="color:#ffffff;font-size:1.25rem;font-weight:700;margin:0 0 8px 0;">'
@@ -59,17 +59,17 @@ def render_booking_flow():
             '<p style="color:#cbd5e1;font-size:0.88rem;margin:0 0 14px 0;">'
             '📍 {address}</p>'
             '<hr style="border:0;border-top:1px solid rgba(148,163,184,0.2);margin:12px 0;">'
-            '<div style="display:flex;justify-content:space-between;margin-bottom:6px;">'
+            '<div style="display:flex;justify-content:space-between;margin-bottom:8px;">'
             '<span style="color:#94a3b8;font-size:0.88rem;font-weight:600;">Slot Number:</span>'
             '<strong style="color:#34d399;font-size:1.1rem;">{slot_number}</strong>'
             '</div>'
-            '<div style="display:flex;justify-content:space-between;margin-bottom:6px;">'
+            '<div style="display:flex;justify-content:space-between;margin-bottom:8px;">'
             '<span style="color:#94a3b8;font-size:0.88rem;font-weight:600;">Slot Type:</span>'
             '<strong style="color:#ffffff;font-size:0.95rem;text-transform:uppercase;">{slot_type}</strong>'
             '</div>'
             '<div style="display:flex;justify-content:space-between;margin-bottom:6px;">'
             '<span style="color:#94a3b8;font-size:0.88rem;font-weight:600;">Rate:</span>'
-            '<strong style="color:#60a5fa;font-size:1rem;">₹{parking_fee:.2f} / hr</strong>'
+            '<strong style="color:#60a5fa;font-size:1.05rem;">₹{parking_fee:.2f} / hr</strong>'
             '</div></div>'
         ).format(
             parking_name=parking.get("parking_name", ""),

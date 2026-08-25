@@ -1,9 +1,36 @@
 import streamlit as st
 import pandas as pd
+import altair as alt
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 
 from frontend.components.api_client import api
+
+
+def _build_dark_chart_theme():
+    """Returns dark theme configuration for Altair charts."""
+    return {
+        "config": {
+            "background": "transparent",
+            "view": {"strokeWidth": 0},
+            "axis": {
+                "gridColor": "rgba(148, 163, 184, 0.12)",
+                "domainColor": "rgba(148, 163, 184, 0.25)",
+                "tickColor": "rgba(148, 163, 184, 0.2)",
+                "labelColor": "#cbd5e1",
+                "labelFontSize": 11,
+                "titleColor": "#94a3b8",
+                "titleFontSize": 12,
+                "titleFontWeight": 600,
+            },
+            "legend": {
+                "labelColor": "#cbd5e1",
+                "titleColor": "#94a3b8",
+                "titleFontSize": 11,
+                "labelFontSize": 11,
+            },
+        }
+    }
 
 
 def render_admin_dashboard():
@@ -37,9 +64,14 @@ def render_admin_dashboard():
         st.markdown(
             """
             <div style="margin-bottom: 20px;">
-                <h1 style="color: #f8fafc; font-size: 2.2rem; font-weight: 800; margin: 0; display: flex; align-items: center; gap: 12px;">
-                    <span>🛡️</span> System Admin Dashboard
-                </h1>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <h1 style="color: #f8fafc; font-size: 2.1rem; font-weight: 800; margin: 0;">
+                        🛡️ System Admin Dashboard
+                    </h1>
+                    <span style="background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.5); padding: 3px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">
+                        SUPERADMIN
+                    </span>
+                </div>
                 <p style="color: #94a3b8; font-size: 0.95rem; margin-top: 6px;">
                     Live monitoring, user governance, slot telemetry, and system analytics.
                 </p>
@@ -48,7 +80,7 @@ def render_admin_dashboard():
             unsafe_allow_html=True
         )
     with col_hdr2:
-        st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
         if st.button("🔄 Refresh Live Data", use_container_width=True, type="primary"):
             st.rerun()
 
@@ -70,12 +102,12 @@ def render_admin_dashboard():
     ])
 
     # =========================================================================
-    # TAB 1: System Overview (Summary Cards & 4 Charts)
+    # TAB 1: System Overview (Summary Cards & 4 Styled Altair Charts)
     # =========================================================================
     with tab_overview:
-        st.markdown("<h3 style='color: #f1f5f9; font-weight: 700; margin-bottom: 16px;'>Live Operational Metrics</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 style='color: #f1f5f9; font-weight: 700; margin: 8px 0 16px 0;'>Live Operational Metrics</h3>", unsafe_allow_html=True)
 
-        # 2. Summary Metric Cards (7 Required Counts)
+        # 2. Summary Metric Cards (8 Counts)
         c1, c2, c3, c4 = st.columns(4)
         with c1:
             st.metric(
@@ -85,7 +117,7 @@ def render_admin_dashboard():
             )
         with c2:
             st.metric(
-                label="🅿️ Parking Locations",
+                label="🏢 Parking Locations",
                 value=stats.get("total_parking_locations", 0),
                 help="Total active and managed parking facilities"
             )
@@ -132,41 +164,107 @@ def render_admin_dashboard():
                 help="Slots offline for inspection or repair"
             )
 
-        st.markdown("<hr style='border: 1px solid rgba(148, 163, 184, 0.15); margin: 25px 0;'>", unsafe_allow_html=True)
+        st.markdown("<hr style='border: 0; border-top: 1px solid rgba(148, 163, 184, 0.15); margin: 24px 0;'>", unsafe_allow_html=True)
         st.markdown("<h3 style='color: #f1f5f9; font-weight: 700; margin-bottom: 16px;'>Visual Breakdowns & Telemetry</h3>", unsafe_allow_html=True)
 
-        # 3. Charts: 4 Required Breakdowns
-        # Load reports data for comprehensive charts
+        # 3. Charts: 4 Breakdowns styled with Altair for Dark Theme and Full Labels (NO TRUNCATION)
         rep_res = api.get_admin_reports(token)
         reports_data = rep_res.get("data", {}) if rep_res.get("success") else {}
 
         chart_row1_col1, chart_row1_col2 = st.columns(2)
+        
+        # CHART 1: Parking-Wise Occupancy Rate (%) — Horizontal Bar Chart with full facility names
         with chart_row1_col1:
             st.markdown("##### 📍 1. Parking-Wise Occupancy Rate (%)")
             occ_list = reports_data.get("parking_occupancy_list", [])
             if occ_list:
                 df_occ = pd.DataFrame(occ_list)
-                df_occ_chart = df_occ[["parking_name", "occupancy_rate"]].copy()
-                df_occ_chart.columns = ["Parking Facility", "Occupancy Rate (%)"]
-                df_occ_chart = df_occ_chart.set_index("Parking Facility")
-                st.bar_chart(df_occ_chart, height=280)
+                df_occ["occupancy_rate"] = df_occ["occupancy_rate"].astype(float)
+                
+                chart_occ = alt.Chart(df_occ).mark_bar(
+                    cornerRadiusTopRight=6,
+                    cornerRadiusBottomRight=6,
+                    color="#38bdf8"
+                ).encode(
+                    x=alt.X(
+                        "occupancy_rate:Q",
+                        title="Occupancy Rate (%)",
+                        scale=alt.Scale(domain=[0, 100]),
+                        axis=alt.Axis(gridColor="rgba(148, 163, 184, 0.12)", labelColor="#cbd5e1", titleColor="#94a3b8")
+                    ),
+                    y=alt.Y(
+                        "parking_name:N",
+                        title="",
+                        sort="-x",
+                        axis=alt.Axis(
+                            labelLimit=350,
+                            labelColor="#f1f5f9",
+                            labelFontSize=11.5,
+                            labelFontWeight="bold"
+                        )
+                    ),
+                    tooltip=[
+                        alt.Tooltip("parking_name:N", title="Facility"),
+                        alt.Tooltip("area:N", title="Area"),
+                        alt.Tooltip("occupancy_rate:Q", title="Occupancy (%)", format=".1f"),
+                        alt.Tooltip("occupied_slots:Q", title="Occupied Slots"),
+                        alt.Tooltip("total_slots:Q", title="Total Slots")
+                    ]
+                ).properties(height=260).configure_view(strokeWidth=0)
+                
+                st.altair_chart(chart_occ, use_container_width=True)
             else:
                 st.info("No parking location occupancy data available.")
 
+        # CHART 2: Bookings by Parking Location — Horizontal Bar Chart with full facility names
         with chart_row1_col2:
             st.markdown("##### 📈 2. Bookings by Parking Location")
             loc_bookings = reports_data.get("bookings_by_parking", [])
             if loc_bookings:
                 df_loc_b = pd.DataFrame(loc_bookings)
-                df_loc_b_chart = df_loc_b[["parking_name", "booking_count"]].copy()
-                df_loc_b_chart.columns = ["Parking Facility", "Total Bookings"]
-                df_loc_b_chart = df_loc_b_chart.set_index("Parking Facility")
-                st.bar_chart(df_loc_b_chart, height=280)
+                df_loc_b["booking_count"] = df_loc_b["booking_count"].astype(int)
+
+                chart_loc_b = alt.Chart(df_loc_b).mark_bar(
+                    cornerRadiusTopRight=6,
+                    cornerRadiusBottomRight=6,
+                    color="#818cf8"
+                ).encode(
+                    x=alt.X(
+                        "booking_count:Q",
+                        title="Total Bookings",
+                        axis=alt.Axis(
+                            tickMinStep=1,
+                            gridColor="rgba(148, 163, 184, 0.12)",
+                            labelColor="#cbd5e1",
+                            titleColor="#94a3b8"
+                        )
+                    ),
+                    y=alt.Y(
+                        "parking_name:N",
+                        title="",
+                        sort="-x",
+                        axis=alt.Axis(
+                            labelLimit=350,
+                            labelColor="#f1f5f9",
+                            labelFontSize=11.5,
+                            labelFontWeight="bold"
+                        )
+                    ),
+                    tooltip=[
+                        alt.Tooltip("parking_name:N", title="Facility"),
+                        alt.Tooltip("area:N", title="Area"),
+                        alt.Tooltip("booking_count:Q", title="Total Bookings")
+                    ]
+                ).properties(height=260).configure_view(strokeWidth=0)
+
+                st.altair_chart(chart_loc_b, use_container_width=True)
             else:
                 st.info("No booking data per location recorded yet.")
 
         st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
         chart_row2_col1, chart_row2_col2 = st.columns(2)
+        
+        # CHART 3: Slot Status Breakdown — Color Coded (Green, Red, Amber, Slate)
         with chart_row2_col1:
             st.markdown("##### 📊 3. Slot Status Breakdown")
             slot_counts = reports_data.get("slot_status_counts", {
@@ -175,23 +273,84 @@ def render_admin_dashboard():
                 "Reserved": stats.get("reserved_slots", 0),
                 "Maintenance": stats.get("maintenance_slots", 0)
             })
-            df_slot_counts = pd.DataFrame(list(slot_counts.items()), columns=["Slot Status", "Count"]).set_index("Slot Status")
-            st.bar_chart(df_slot_counts, height=280)
+            df_slot_counts = pd.DataFrame([
+                {"Status": k, "Count": v} for k, v in slot_counts.items()
+            ])
+            
+            slot_color_scale = alt.Scale(
+                domain=["Available", "Occupied", "Reserved", "Maintenance"],
+                range=["#10b981", "#ef4444", "#f59e0b", "#64748b"]
+            )
+            
+            chart_slot_status = alt.Chart(df_slot_counts).mark_bar(
+                cornerRadiusTopLeft=6,
+                cornerRadiusTopRight=6
+            ).encode(
+                x=alt.X(
+                    "Status:N",
+                    title="",
+                    sort=["Available", "Occupied", "Reserved", "Maintenance"],
+                    axis=alt.Axis(labelColor="#f1f5f9", labelFontSize=12, labelFontWeight="bold", labelAngle=0)
+                ),
+                y=alt.Y(
+                    "Count:Q",
+                    title="Number of Slots",
+                    axis=alt.Axis(gridColor="rgba(148, 163, 184, 0.12)", labelColor="#cbd5e1", titleColor="#94a3b8")
+                ),
+                color=alt.Color("Status:N", scale=slot_color_scale, legend=None),
+                tooltip=[
+                    alt.Tooltip("Status:N", title="Slot Status"),
+                    alt.Tooltip("Count:Q", title="Total Slots")
+                ]
+            ).properties(height=260).configure_view(strokeWidth=0)
 
+            st.altair_chart(chart_slot_status, use_container_width=True)
+
+        # CHART 4: Booking Status Breakdown — Color Coded (Amber, Blue, Green, Red)
         with chart_row2_col2:
             st.markdown("##### 📋 4. Booking Status Breakdown")
             booking_counts = reports_data.get("booking_status_counts", {
                 "Reserved": 0, "Active": 0, "Completed": 0, "Cancelled": 0
             })
-            df_booking_counts = pd.DataFrame(list(booking_counts.items()), columns=["Booking Status", "Count"]).set_index("Booking Status")
-            st.bar_chart(df_booking_counts, height=280)
+            df_booking_counts = pd.DataFrame([
+                {"Status": k, "Count": v} for k, v in booking_counts.items()
+            ])
+
+            booking_color_scale = alt.Scale(
+                domain=["Reserved", "Active", "Completed", "Cancelled"],
+                range=["#f59e0b", "#3b82f6", "#10b981", "#ef4444"]
+            )
+
+            chart_booking_status = alt.Chart(df_booking_counts).mark_bar(
+                cornerRadiusTopLeft=6,
+                cornerRadiusTopRight=6
+            ).encode(
+                x=alt.X(
+                    "Status:N",
+                    title="",
+                    sort=["Reserved", "Active", "Completed", "Cancelled"],
+                    axis=alt.Axis(labelColor="#f1f5f9", labelFontSize=12, labelFontWeight="bold", labelAngle=0)
+                ),
+                y=alt.Y(
+                    "Count:Q",
+                    title="Number of Bookings",
+                    axis=alt.Axis(gridColor="rgba(148, 163, 184, 0.12)", labelColor="#cbd5e1", titleColor="#94a3b8")
+                ),
+                color=alt.Color("Status:N", scale=booking_color_scale, legend=None),
+                tooltip=[
+                    alt.Tooltip("Status:N", title="Booking Status"),
+                    alt.Tooltip("Count:Q", title="Total Bookings")
+                ]
+            ).properties(height=260).configure_view(strokeWidth=0)
+
+            st.altair_chart(chart_booking_status, use_container_width=True)
 
     # =========================================================================
     # TAB 2: User Management (View All, Details, Activate/Deactivate)
     # =========================================================================
     with tab_users:
-        st.markdown("<h3 style='color: #f1f5f9; font-weight: 700; margin-bottom: 8px;'>👥 User Management</h3>", unsafe_allow_html=True)
-        st.markdown("<p style='color: #94a3b8; font-size: 0.88rem; margin-bottom: 20px;'>Inspect user records and toggle account statuses. Password hashes are strictly concealed.</p>", unsafe_allow_html=True)
+        st.markdown("<h3 style='color: #f1f5f9; font-weight: 700; margin: 8px 0 6px 0;'>👥 User Governance & Management</h3>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #94a3b8; font-size: 0.88rem; margin-bottom: 20px;'>Inspect registered user accounts and toggle operational statuses. Sensitive credentials remain encrypted.</p>", unsafe_allow_html=True)
 
         users_res = api.get_admin_users(token)
         if not users_res.get("success"):
@@ -242,7 +401,7 @@ def render_admin_dashboard():
                 df_users_display = pd.DataFrame(table_rows)
                 st.dataframe(df_users_display, use_container_width=True, hide_index=True)
 
-                st.markdown("<hr style='border: 1px solid rgba(148, 163, 184, 0.15); margin: 20px 0;'>", unsafe_allow_html=True)
+                st.markdown("<hr style='border: 0; border-top: 1px solid rgba(148, 163, 184, 0.15); margin: 20px 0;'>", unsafe_allow_html=True)
                 st.markdown("#### ⚡ Manage User Account Status")
 
                 user_options = {f"ID #{u['user_id']} — {u['name']} ({u['email']}) [{u['status'].upper()}]": u for u in filtered_users}
@@ -251,22 +410,27 @@ def render_admin_dashboard():
 
                 col_ud1, col_ud2 = st.columns([2, 1])
                 with col_ud1:
+                    u_role = target_user.get("role", "").upper()
+                    u_role_color = "#38bdf8" if u_role == "ADMIN" else ("#a78bfa" if u_role == "MANAGER" else "#34d399")
+                    u_role_bg = "rgba(56, 189, 248, 0.2)" if u_role == "ADMIN" else ("rgba(167, 139, 250, 0.2)" if u_role == "MANAGER" else "rgba(52, 211, 153, 0.2)")
+
                     st.markdown(
                         f"""
                         <div style="
-                            background: rgba(30, 41, 59, 0.7);
-                            border: 1px solid rgba(148, 163, 184, 0.2);
-                            border-radius: 10px;
-                            padding: 16px 20px;
+                            background: rgba(30, 41, 59, 0.75);
+                            border: 1px solid rgba(148, 163, 184, 0.25);
+                            border-radius: 12px;
+                            padding: 18px 22px;
                             line-height: 1.6;
+                            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
                         ">
-                            <h4 style="color: #60a5fa; margin: 0 0 10px 0;">👤 User Profile Details</h4>
-                            <div style="color: #f1f5f9; font-size: 0.95rem;">
+                            <h4 style="color: #60a5fa; margin: 0 0 10px 0; font-size: 1.1rem; font-weight: 800;">👤 User Profile Details</h4>
+                            <div style="color: #f1f5f9; font-size: 0.92rem;">
                                 <strong>User ID:</strong> #{target_user.get('user_id')}<br>
                                 <strong>Name:</strong> {target_user.get('name')}<br>
                                 <strong>Email:</strong> {target_user.get('email')}<br>
                                 <strong>Phone:</strong> {target_user.get('phone') or 'Not provided'}<br>
-                                <strong>Role:</strong> <span style="background: rgba(99, 102, 241, 0.3); padding: 2px 8px; border-radius: 4px; font-size: 0.85rem;">{target_user.get('role', '').upper()}</span><br>
+                                <strong>Role:</strong> <span style="background: {u_role_bg}; color: {u_role_color}; border: 1px solid {u_role_color}60; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 700;">{u_role}</span><br>
                                 <strong>Current Status:</strong> 
                                 <span style="color: {'#34d399' if target_user.get('status') == 'active' else '#f87171'}; font-weight: 700;">
                                     {target_user.get('status', '').upper()}
@@ -284,7 +448,7 @@ def render_admin_dashboard():
                     is_self = (user.get("user_id") == target_user.get("user_id"))
 
                     if current_stat == "active":
-                        st.markdown("<p style='color: #94a3b8; font-size: 0.85rem;'>This account is currently active and permitted to login.</p>", unsafe_allow_html=True)
+                        st.markdown("<p style='color: #cbd5e1; font-size: 0.85rem;'>This account is currently active and permitted to login.</p>", unsafe_allow_html=True)
                         if is_self:
                             st.info("🔒 You cannot deactivate your own admin account.")
                         else:
@@ -296,7 +460,7 @@ def render_admin_dashboard():
                                 else:
                                     st.error(f"Error deactivating user: {update_res.get('error')}")
                     else:
-                        st.markdown("<p style='color: #f87171; font-size: 0.85rem;'>This account is currently inactive (login blocked).</p>", unsafe_allow_html=True)
+                        st.markdown("<p style='color: #f87171; font-size: 0.85rem; font-weight: 600;'>This account is currently inactive (login blocked).</p>", unsafe_allow_html=True)
                         if st.button("✅ Activate Account", type="primary", use_container_width=True):
                             update_res = api.update_admin_user_status(token, target_user["user_id"], "active")
                             if update_res.get("success"):
@@ -311,8 +475,8 @@ def render_admin_dashboard():
     # TAB 3: Parking Monitoring (Read-Only)
     # =========================================================================
     with tab_parking:
-        st.markdown("<h3 style='color: #f1f5f9; font-weight: 700; margin-bottom: 8px;'>🅿️ Parking Location Telemetry & Monitoring</h3>", unsafe_allow_html=True)
-        st.markdown("<p style='color: #94a3b8; font-size: 0.88rem; margin-bottom: 20px;'>Live status and slot capacity distribution across all facilities (Read-Only).</p>", unsafe_allow_html=True)
+        st.markdown("<h3 style='color: #f1f5f9; font-weight: 700; margin: 8px 0 6px 0;'>🅿️ Parking Location Telemetry & Monitoring</h3>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #94a3b8; font-size: 0.88rem; margin-bottom: 20px;'>Live capacity distribution, fee configuration, and operational status across all facilities (Read-Only).</p>", unsafe_allow_html=True)
 
         parking_res = api.get_admin_parking_summary(token)
         if not parking_res.get("success"):
@@ -369,8 +533,8 @@ def render_admin_dashboard():
                 with col_pi1:
                     st.markdown(
                         f"""
-                        <div style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(148, 163, 184, 0.2); border-radius: 10px; padding: 14px 18px;">
-                            <h5 style="color: #60a5fa; margin: 0 0 8px 0;">📍 Location Information</h5>
+                        <div style="background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(148, 163, 184, 0.22); border-radius: 10px; padding: 16px 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                            <h5 style="color: #60a5fa; margin: 0 0 8px 0; font-weight: 700;">📍 Location Information</h5>
                             <p style="color: #f1f5f9; font-size: 0.88rem; margin: 0; line-height: 1.6;">
                                 <strong>Facility:</strong> {chosen_p.get('parking_name')}<br>
                                 <strong>Area:</strong> {chosen_p.get('area')}<br>
@@ -385,8 +549,8 @@ def render_admin_dashboard():
                 with col_pi2:
                     st.markdown(
                         f"""
-                        <div style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(148, 163, 184, 0.2); border-radius: 10px; padding: 14px 18px;">
-                            <h5 style="color: #34d399; margin: 0 0 8px 0;">⚡ Amenities & Status</h5>
+                        <div style="background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(148, 163, 184, 0.22); border-radius: 10px; padding: 16px 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                            <h5 style="color: #34d399; margin: 0 0 8px 0; font-weight: 700;">⚡ Amenities & Status</h5>
                             <p style="color: #f1f5f9; font-size: 0.88rem; margin: 0; line-height: 1.6;">
                                 <strong>EV Charging:</strong> {'⚡ Yes' if chosen_p.get('ev_available') else '❌ No'}<br>
                                 <strong>Accessible Parking:</strong> {'♿ Yes' if chosen_p.get('accessible_available') else '❌ No'}<br>
@@ -400,8 +564,8 @@ def render_admin_dashboard():
                 with col_pi3:
                     st.markdown(
                         f"""
-                        <div style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(148, 163, 184, 0.2); border-radius: 10px; padding: 14px 18px;">
-                            <h5 style="color: #fbbf24; margin: 0 0 8px 0;">📊 Slot Breakdown</h5>
+                        <div style="background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(148, 163, 184, 0.22); border-radius: 10px; padding: 16px 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                            <h5 style="color: #fbbf24; margin: 0 0 8px 0; font-weight: 700;">📊 Slot Breakdown</h5>
                             <p style="color: #f1f5f9; font-size: 0.88rem; margin: 0; line-height: 1.6;">
                                 <strong>Total Capacity:</strong> {chosen_p.get('total_slots', 0)} slots<br>
                                 <strong>🟢 Available:</strong> {chosen_p.get('available_slots', 0)}<br>
@@ -420,7 +584,7 @@ def render_admin_dashboard():
     # TAB 4: Booking Monitoring (Read-Only)
     # =========================================================================
     with tab_bookings:
-        st.markdown("<h3 style='color: #f1f5f9; font-weight: 700; margin-bottom: 8px;'>📅 Booking Audit & Monitoring</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 style='color: #f1f5f9; font-weight: 700; margin: 8px 0 6px 0;'>📅 Booking Audit & Monitoring</h3>", unsafe_allow_html=True)
         st.markdown("<p style='color: #94a3b8; font-size: 0.88rem; margin-bottom: 20px;'>Search and filter live reservations and parking sessions (Read-Only).</p>", unsafe_allow_html=True)
 
         # Filters: Search by booking ID, filter by parking location, status
@@ -429,7 +593,6 @@ def render_admin_dashboard():
             search_bid = st.text_input("🔍 Search Booking ID", placeholder="e.g. 1").strip()
             search_bid_int = int(search_bid) if search_bid.isdigit() else None
         with col_bf2:
-            # Fetch locations for dropdown
             p_res = api.get_admin_parking_summary(token)
             p_list = p_res.get("data", []) if p_res.get("success") else []
             p_filter_opts = {"All Locations": None}
@@ -459,23 +622,23 @@ def render_admin_dashboard():
                 f"""
                 <div style="
                     display: flex;
-                    gap: 15px;
+                    gap: 12px;
                     flex-wrap: wrap;
-                    margin-bottom: 15px;
+                    margin-bottom: 16px;
                 ">
-                    <span style="background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.4); padding: 4px 12px; border-radius: 6px; font-size: 0.82rem; color: #93c5fd;">
+                    <span style="background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.4); padding: 5px 14px; border-radius: 8px; font-size: 0.82rem; color: #93c5fd; font-weight: 700;">
                         Total: <strong>{b_data.get('total_bookings', 0)}</strong>
                     </span>
-                    <span style="background: rgba(234, 179, 8, 0.2); border: 1px solid rgba(234, 179, 8, 0.4); padding: 4px 12px; border-radius: 6px; font-size: 0.82rem; color: #fde047;">
+                    <span style="background: rgba(245, 158, 11, 0.2); border: 1px solid rgba(245, 158, 11, 0.4); padding: 5px 14px; border-radius: 8px; font-size: 0.82rem; color: #fde68a; font-weight: 700;">
                         🟡 Reserved: <strong>{b_data.get('reserved_count', 0)}</strong>
                     </span>
-                    <span style="background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.4); padding: 4px 12px; border-radius: 6px; font-size: 0.82rem; color: #60a5fa;">
+                    <span style="background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.4); padding: 5px 14px; border-radius: 8px; font-size: 0.82rem; color: #60a5fa; font-weight: 700;">
                         🔵 Active: <strong>{b_data.get('active_count', 0)}</strong>
                     </span>
-                    <span style="background: rgba(34, 197, 94, 0.2); border: 1px solid rgba(34, 197, 94, 0.4); padding: 4px 12px; border-radius: 6px; font-size: 0.82rem; color: #86efac;">
+                    <span style="background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.4); padding: 5px 14px; border-radius: 8px; font-size: 0.82rem; color: #6ee7b7; font-weight: 700;">
                         🟢 Completed: <strong>{b_data.get('completed_count', 0)}</strong>
                     </span>
-                    <span style="background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); padding: 4px 12px; border-radius: 6px; font-size: 0.82rem; color: #fca5a5;">
+                    <span style="background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); padding: 5px 14px; border-radius: 8px; font-size: 0.82rem; color: #fca5a5; font-weight: 700;">
                         🔴 Cancelled: <strong>{b_data.get('cancelled_count', 0)}</strong>
                     </span>
                 </div>
@@ -526,7 +689,7 @@ def render_admin_dashboard():
     # TAB 5: Reports & Analytics
     # =========================================================================
     with tab_reports:
-        st.markdown("<h3 style='color: #f1f5f9; font-weight: 700; margin-bottom: 8px;'>📈 Analytical Reports & Utilization Intelligence</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 style='color: #f1f5f9; font-weight: 700; margin: 8px 0 6px 0;'>📈 Analytical Reports & Utilization Intelligence</h3>", unsafe_allow_html=True)
         st.markdown("<p style='color: #94a3b8; font-size: 0.88rem; margin-bottom: 20px;'>Live aggregated insights, facility demand ranking, and system-wide capacity metrics.</p>", unsafe_allow_html=True)
 
         rep_res = api.get_admin_reports(token)
@@ -546,7 +709,7 @@ def render_admin_dashboard():
             with rk4:
                 st.metric("Available Slots Free", r_data.get("available_slots", 0))
 
-            st.markdown("<hr style='border: 1px solid rgba(148, 163, 184, 0.15); margin: 20px 0;'>", unsafe_allow_html=True)
+            st.markdown("<hr style='border: 0; border-top: 1px solid rgba(148, 163, 184, 0.15); margin: 24px 0;'>", unsafe_allow_html=True)
 
             # Report 1: Most-Used Parking Facilities Leaderboard
             col_rep1, col_rep2 = st.columns([1.2, 1])
@@ -581,7 +744,7 @@ def render_admin_dashboard():
                     df_sb = pd.DataFrame(sb_rows)
                     st.dataframe(df_sb, use_container_width=True, hide_index=True)
 
-            st.markdown("<hr style='border: 1px solid rgba(148, 163, 184, 0.15); margin: 20px 0;'>", unsafe_allow_html=True)
+            st.markdown("<hr style='border: 0; border-top: 1px solid rgba(148, 163, 184, 0.15); margin: 24px 0;'>", unsafe_allow_html=True)
 
             # Report 2: Full Per-Location Occupancy & Capacity Ledger
             st.markdown("#### 📍 Facility-by-Facility Occupancy & Slot Availability Ledger")

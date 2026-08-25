@@ -249,10 +249,10 @@ def render_parking_search():
 
                                 # Slot card styling
                                 bg_color = (
-                                    "rgba(16,185,129,0.18)" if is_available
-                                    else ("rgba(245,158,11,0.18)" if s_status == "reserved"
-                                          else ("rgba(239,68,68,0.18)" if s_status == "occupied"
-                                                else "rgba(100,116,139,0.18)"))
+                                    "rgba(16,185,129,0.15)" if is_available
+                                    else ("rgba(245,158,11,0.15)" if s_status == "reserved"
+                                          else ("rgba(239,68,68,0.15)" if s_status == "occupied"
+                                                else "rgba(100,116,139,0.15)"))
                                 )
                                 border_color = (
                                     "#10b981" if is_available
@@ -263,7 +263,8 @@ def render_parking_search():
 
                                 slot_card_html = (
                                     '<div style="background:{bg};border:1px solid {bc};'
-                                    'border-radius:10px;padding:12px 10px;text-align:center;margin-bottom:8px;">'
+                                    'border-radius:10px;padding:12px 10px;text-align:center;margin-bottom:8px;'
+                                    'box-shadow:0 2px 8px rgba(0,0,0,0.12);">'
                                     '<div style="font-size:1.15rem;font-weight:800;color:#ffffff;">'
                                     '{icon} {num}</div>'
                                     '<div style="color:#cbd5e1;font-size:0.75rem;font-weight:700;'

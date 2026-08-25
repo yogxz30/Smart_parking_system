@@ -24,16 +24,19 @@ def render_user_dashboard():
     # =========================================================================
     # Header & Greeting
     # =========================================================================
-    st.markdown(
-        '<div style="margin-bottom:22px;">'
+    header_html = (
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start;'
+        'flex-wrap:wrap;gap:14px;margin-bottom:22px;">'
+        '<div>'
         '<h1 style="color:#ffffff;font-size:1.9rem;font-weight:800;margin:0;">'
         f'Welcome back, {user.get("name", "Driver")}! 👋'
         '</h1>'
         '<p style="color:#cbd5e1;font-size:0.95rem;margin:6px 0 0 0;">'
         'Find, reserve, and manage your parking sessions across Chennai with real-time slot tracking.'
-        '</p></div>',
-        unsafe_allow_html=True
+        '</p>'
+        '</div></div>'
     )
+    st.markdown(header_html, unsafe_allow_html=True)
 
     # =========================================================================
     # Feature 1: Active session checkout reminder (top of page)
@@ -43,9 +46,9 @@ def render_user_dashboard():
     # =========================================================================
     # Feature 3: Manual Refresh Button
     # =========================================================================
-    refresh_col, _ = st.columns([1, 5])
+    refresh_col, _ = st.columns([1.2, 4.8])
     with refresh_col:
-        if st.button("🔄 Refresh", key="btn_dash_refresh", use_container_width=True):
+        if st.button("🔄 Refresh Data", key="btn_dash_refresh", use_container_width=True):
             st.rerun()
 
     # Fetch fresh dashboard data from FastAPI
@@ -88,14 +91,13 @@ def render_user_dashboard():
                 st.error(f"❌ Cancellation failed: {res.get('error')}")
 
     # =========================================================================
-    # Use the shared high-contrast KPI cards so labels, values, and icons stay
-    # readable against the dark application background at every viewport size.
+    # High-contrast KPI cards
     # =========================================================================
     kpi1, kpi2, kpi3 = st.columns(3)
 
     with kpi1:
         render_kpi_card(
-            title="Nearby parking",
+            title="Nearby Parking",
             value=stats.get("nearby_parking_count", 0),
             subtitle="Active facilities in Chennai",
             icon="🏢",
@@ -104,7 +106,7 @@ def render_user_dashboard():
 
     with kpi2:
         render_kpi_card(
-            title="Available slots",
+            title="Available Slots",
             value=stats.get("available_slots_count", 0),
             subtitle="Ready for reservation now",
             icon="🅿️",
@@ -113,15 +115,15 @@ def render_user_dashboard():
 
     with kpi3:
         render_kpi_card(
-            title="Active bookings",
+            title="Active Bookings",
             value=stats.get("active_bookings_count", 0),
-            subtitle="Reserved and checked-in sessions",
+            subtitle="Reserved & active sessions",
             icon="🎫",
             theme="amber",
         )
 
     # =========================================================================
-    # Feature 3: Quick Navigation Actions — "Book New Slot" button prominent
+    # Quick Navigation Actions
     # =========================================================================
     st.markdown(
         "<h4 style='color:#f1f5f9;font-size:1.05rem;font-weight:700;margin:18px 0 10px 0;'>"
@@ -145,7 +147,7 @@ def render_user_dashboard():
     st.markdown("<div style='height:15px;'></div>", unsafe_allow_html=True)
 
     # =========================================================================
-    # Feature 3: Current Active Booking — highlighted card with check-in note
+    # Current Active Booking
     # =========================================================================
     st.markdown(
         "<h3 style='color:#ffffff;font-size:1.3rem;font-weight:800;margin:22px 0 12px 0;'>"
@@ -154,7 +156,6 @@ def render_user_dashboard():
     )
 
     if active_booking:
-        # Feature 3: If status is "active" (checked in), show an inline note
         booking_status = str(active_booking.get("status", "")).lower()
         if booking_status == "active":
             st.markdown(
@@ -171,7 +172,6 @@ def render_user_dashboard():
             on_cancel_callback=handle_cancel
         )
     else:
-        # Feature 3: Friendly empty-state with quick-action link
         st.markdown(
             '<div style="background:rgba(30,41,59,0.5);border:1px dashed rgba(148,163,184,0.3);'
             'border-radius:12px;padding:26px;text-align:center;margin-bottom:20px;">'
@@ -182,7 +182,6 @@ def render_user_dashboard():
             '</p></div>',
             unsafe_allow_html=True
         )
-        # Feature 3: Quick action link in empty state
         if st.button("📍 Search Parking Now", key="btn_dash_empty_search", type="primary"):
             st.session_state["active_page"] = "search"
             st.rerun()
