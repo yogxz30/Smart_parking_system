@@ -5,11 +5,12 @@ from backend.routers.auth import router as auth_router
 from backend.routers.user import router as user_router
 from backend.routers.parking import router as parking_router, slots_router, sessions_router
 from backend.routers.booking import router as booking_router
+from backend.routers.admin import router as admin_router
 
 # Initialize FastAPI application
 app = FastAPI(
     title="Smart Parking Finder & Management System API",
-    description="Backend REST API for Smart Parking Finder (Member 1 - User & Location Module)",
+    description="Backend REST API for Smart Parking Finder (Member 1 - User & Location Module, Member 2 - Parking & Slot Management, Member 3 - Admin & Dashboard)",
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc"
@@ -31,6 +32,8 @@ app.include_router(parking_router)
 app.include_router(slots_router)
 app.include_router(sessions_router)
 app.include_router(booking_router)
+app.include_router(admin_router)
+
 
 
 @app.get("/health", tags=["Health"])

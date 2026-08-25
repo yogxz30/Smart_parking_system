@@ -371,6 +371,103 @@ class APIClient:
         except Exception as e:
             return {"success": False, "error": f"Connection error: {str(e)}"}
 
+    # =========================================================================
+    # Admin & Dashboard Operations (Member 3)
+    # =========================================================================
+    def get_admin_dashboard_stats(self, token: str) -> Dict[str, Any]:
+        try:
+            resp = requests.get(
+                f"{self.base_url}/api/admin/dashboard-stats",
+                headers=self._get_headers(token),
+                timeout=8
+            )
+            return self._handle_response(resp)
+        except Exception as e:
+            return {"success": False, "error": f"Connection error: {str(e)}"}
+
+    def get_admin_parking_summary(self, token: str) -> Dict[str, Any]:
+        try:
+            resp = requests.get(
+                f"{self.base_url}/api/admin/parking-summary",
+                headers=self._get_headers(token),
+                timeout=8
+            )
+            return self._handle_response(resp)
+        except Exception as e:
+            return {"success": False, "error": f"Connection error: {str(e)}"}
+
+    def get_admin_slot_summary(self, token: str) -> Dict[str, Any]:
+        try:
+            resp = requests.get(
+                f"{self.base_url}/api/admin/slot-summary",
+                headers=self._get_headers(token),
+                timeout=8
+            )
+            return self._handle_response(resp)
+        except Exception as e:
+            return {"success": False, "error": f"Connection error: {str(e)}"}
+
+    def get_admin_booking_summary(
+        self,
+        token: str,
+        parking_id: Optional[int] = None,
+        status_filter: Optional[str] = None,
+        search_id: Optional[int] = None
+    ) -> Dict[str, Any]:
+        try:
+            params = {}
+            if parking_id:
+                params["parking_id"] = parking_id
+            if status_filter and status_filter.lower() != "all":
+                params["status_filter"] = status_filter
+            if search_id:
+                params["search_id"] = search_id
+
+            resp = requests.get(
+                f"{self.base_url}/api/admin/booking-summary",
+                params=params,
+                headers=self._get_headers(token),
+                timeout=8
+            )
+            return self._handle_response(resp)
+        except Exception as e:
+            return {"success": False, "error": f"Connection error: {str(e)}"}
+
+    def get_admin_users(self, token: str) -> Dict[str, Any]:
+        try:
+            resp = requests.get(
+                f"{self.base_url}/api/admin/users",
+                headers=self._get_headers(token),
+                timeout=8
+            )
+            return self._handle_response(resp)
+        except Exception as e:
+            return {"success": False, "error": f"Connection error: {str(e)}"}
+
+    def update_admin_user_status(self, token: str, user_id: int, new_status: str) -> Dict[str, Any]:
+        try:
+            resp = requests.put(
+                f"{self.base_url}/api/admin/users/{user_id}/status",
+                json={"status": new_status},
+                headers=self._get_headers(token),
+                timeout=8
+            )
+            return self._handle_response(resp)
+        except Exception as e:
+            return {"success": False, "error": f"Connection error: {str(e)}"}
+
+    def get_admin_reports(self, token: str) -> Dict[str, Any]:
+        try:
+            resp = requests.get(
+                f"{self.base_url}/api/admin/reports",
+                headers=self._get_headers(token),
+                timeout=8
+            )
+            return self._handle_response(resp)
+        except Exception as e:
+            return {"success": False, "error": f"Connection error: {str(e)}"}
+
 
 # Global singleton instance for Streamlit pages
 api = APIClient()
+

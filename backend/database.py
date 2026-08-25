@@ -17,17 +17,24 @@ DB_NAME = os.getenv("DB_NAME", "smart_parking_db")
 encoded_password = urllib.parse.quote_plus(DB_PASSWORD)
 
 # MySQL Connection String using PyMySQL
-DATABASE_URL = f"mysql+pymysql://{DB_USER}:{encoded_password}@{DB_HOST}:{DB_PORT}/{DB_NAME}?charset=utf8mb4"
+DATABASE_URL = os.getenv("DATABASE_URL") or f"mysql+pymysql://{DB_USER}:{encoded_password}@{DB_HOST}:{DB_PORT}/{DB_NAME}?charset=utf8mb4"
 
-# Create SQLAlchemy engine with connection pool
-engine = create_engine(
-    DATABASE_URL,
-    pool_pre_ping=True,
-    pool_recycle=3600,
-    pool_size=10,
-    max_overflow=20,
-    echo=False
-)
+# Engine configuration supporting both MySQL and SQLite
+engine_kwargs = {"echo": False}
+if "sqlite" in DATABASE_URL:
+    from sqlalchemy.pool import StaticPool
+    engine_kwargs["connect_args"] = {"check_same_thread": False}
+    engine_kwargs["poolclass"] = StaticPool
+else:
+    engine_kwargs.update({
+        "pool_pre_ping": True,
+        "pool_recycle": 3600,
+        "pool_size": 10,
+        "max_overflow": 20
+    })
+
+engine = create_engine(DATABASE_URL, **engine_kwargs)
+
 
 # SessionLocal class for creating database sessions
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
