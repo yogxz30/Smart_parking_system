@@ -13,6 +13,8 @@ from frontend.pages.booking import render_booking_flow
 from frontend.pages.my_bookings import render_my_bookings
 from frontend.pages.profile import render_user_profile
 from frontend.pages.parking_management import render_parking_management
+from frontend.pages.admin_dashboard import render_admin_dashboard
+
 
 
 # ==============================================================================
@@ -218,8 +220,15 @@ def main():
             else:
                 st.session_state["active_page"] = "dashboard"
                 st.rerun()
+        elif active_page in {"admin_dashboard", "admin"}:
+            if str(user.get("role", "user")).lower() == "admin":
+                render_admin_dashboard()
+            else:
+                st.session_state["active_page"] = "dashboard"
+                st.rerun()
         else:
             render_user_dashboard()
+
 
 
 if __name__ == "__main__":
