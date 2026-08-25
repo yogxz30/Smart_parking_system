@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from backend.routers.auth import router as auth_router
 from backend.routers.user import router as user_router
-from backend.routers.parking import router as parking_router
+from backend.routers.parking import router as parking_router, slots_router, sessions_router
 from backend.routers.booking import router as booking_router
 
 # Initialize FastAPI application
@@ -28,6 +28,8 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(user_router)
 app.include_router(parking_router)
+app.include_router(slots_router)
+app.include_router(sessions_router)
 app.include_router(booking_router)
 
 

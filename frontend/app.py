@@ -12,6 +12,7 @@ from frontend.pages.parking_search import render_parking_search
 from frontend.pages.booking import render_booking_flow
 from frontend.pages.my_bookings import render_my_bookings
 from frontend.pages.profile import render_user_profile
+from frontend.pages.parking_management import render_parking_management
 
 
 # ==============================================================================
@@ -211,6 +212,12 @@ def main():
             render_my_bookings()
         elif active_page == "profile":
             render_user_profile()
+        elif active_page == "parking_management":
+            if str(user.get("role", "user")).lower() in {"manager", "admin"}:
+                render_parking_management()
+            else:
+                st.session_state["active_page"] = "dashboard"
+                st.rerun()
         else:
             render_user_dashboard()
 

@@ -1,5 +1,5 @@
 from datetime import datetime, date, time
-from typing import Optional, List
+from typing import Optional, List, Literal
 from pydantic import BaseModel, EmailStr, Field, ConfigDict
 
 
@@ -95,6 +95,48 @@ class ParkingDetailResponse(BaseModel):
     accessible_available: bool
     status: str
     slots: List[ParkingSlotResponse] = []
+
+
+class ParkingLocationCreate(BaseModel):
+    parking_name: str = Field(..., min_length=1, max_length=150)
+    area: str = Field(..., min_length=1, max_length=100)
+    address: Optional[str] = Field(None, max_length=255)
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    total_slots: int = Field(0, ge=0)
+    parking_fee: float = Field(0, ge=0)
+    opening_time: Optional[time] = None
+    closing_time: Optional[time] = None
+    ev_available: bool = False
+    accessible_available: bool = False
+
+
+class ParkingLocationUpdate(BaseModel):
+    parking_name: Optional[str] = Field(None, min_length=1, max_length=150)
+    area: Optional[str] = Field(None, min_length=1, max_length=100)
+    address: Optional[str] = Field(None, max_length=255)
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    total_slots: Optional[int] = Field(None, ge=0)
+    parking_fee: Optional[float] = Field(None, ge=0)
+    opening_time: Optional[time] = None
+    closing_time: Optional[time] = None
+    ev_available: Optional[bool] = None
+    accessible_available: Optional[bool] = None
+
+
+class ParkingActiveStatusUpdate(BaseModel):
+    is_active: bool
+
+
+class ParkingSlotCreate(BaseModel):
+    parking_id: int = Field(..., gt=0)
+    slot_number: str = Field(..., min_length=1, max_length=20)
+    slot_type: Literal["normal", "ev", "accessible"] = "normal"
+
+
+class SlotStatusUpdate(BaseModel):
+    status: Literal["available", "reserved", "occupied", "maintenance"]
 
 
 # ==============================================================================

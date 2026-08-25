@@ -9,6 +9,7 @@ from backend.models import (
     User, BookingStatus, SlotStatus, SessionStatus, ParkingLocationStatus
 )
 from backend.schemas import BookingCreate, CheckInRequest, CheckOutRequest
+from backend.services.parking_service import validate_slot_status_transition
 
 
 def create_user_booking(
@@ -148,6 +149,7 @@ def cancel_user_booking(
 
     slot = db.query(ParkingSlot).filter(ParkingSlot.slot_id == booking.slot_id).first()
     if slot and slot.status == SlotStatus.RESERVED:
+        validate_slot_status_transition(slot.status, SlotStatus.AVAILABLE)
         slot.status = SlotStatus.AVAILABLE
 
     db.commit()
@@ -214,8 +216,10 @@ def process_check_in(
     # Update booking and slot statuses
     booking.status = BookingStatus.ACTIVE
     slot = db.query(ParkingSlot).filter(ParkingSlot.slot_id == booking.slot_id).first()
-    if slot:
-        slot.status = SlotStatus.OCCUPIED
+    if not slot:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Parking slot not found for this booking")
+    validate_slot_status_transition(slot.status, SlotStatus.OCCUPIED)
+    slot.status = SlotStatus.OCCUPIED
 
     db.add(session)
     db.commit()
@@ -263,8 +267,10 @@ def process_check_out(
 
     # Release slot back to available
     slot = db.query(ParkingSlot).filter(ParkingSlot.slot_id == session.slot_id).first()
-    if slot:
-        slot.status = SlotStatus.AVAILABLE
+    if not slot:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Parking slot not found for this session")
+    validate_slot_status_transition(slot.status, SlotStatus.AVAILABLE)
+    slot.status = SlotStatus.AVAILABLE
 
     db.commit()
     db.refresh(session)
