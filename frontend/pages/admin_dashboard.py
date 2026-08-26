@@ -7,30 +7,99 @@ from datetime import datetime
 from frontend.components.api_client import api
 
 
-def _build_dark_chart_theme():
-    """Returns dark theme configuration for Altair charts."""
-    return {
-        "config": {
-            "background": "transparent",
-            "view": {"strokeWidth": 0},
-            "axis": {
-                "gridColor": "rgba(148, 163, 184, 0.12)",
-                "domainColor": "rgba(148, 163, 184, 0.25)",
-                "tickColor": "rgba(148, 163, 184, 0.2)",
-                "labelColor": "#cbd5e1",
-                "labelFontSize": 11,
-                "titleColor": "#94a3b8",
-                "titleFontSize": 12,
-                "titleFontWeight": 600,
-            },
-            "legend": {
-                "labelColor": "#cbd5e1",
-                "titleColor": "#94a3b8",
-                "titleFontSize": 11,
-                "labelFontSize": 11,
-            },
-        }
+CHART_TEXT_COLOR = "#0f172a"
+CHART_GRID_COLOR = "#cbd5e1"
+CHART_BACKGROUND = "#f8fafc"
+OCCUPANCY_COLOR = "#38bdf8"
+BOOKINGS_COLOR = "#818cf8"
+SLOT_STATUS_COLORS = [
+    ("Available", "#10b981"),
+    ("Occupied", "#ef4444"),
+    ("Reserved", "#f59e0b"),
+    ("Maintenance", "#64748b"),
+]
+BOOKING_STATUS_COLORS = [
+    ("Reserved", "#f59e0b"),
+    ("Active", "#3b82f6"),
+    ("Completed", "#10b981"),
+    ("Cancelled", "#ef4444"),
+]
+
+
+def _configure_light_chart(chart: alt.Chart) -> alt.Chart:
+    """Apply a readable, explicit palette to every Altair chart text element."""
+    return (
+        chart.configure(background=CHART_BACKGROUND)
+        .configure_view(fill=CHART_BACKGROUND, strokeWidth=0)
+        .configure_axis(
+            gridColor=CHART_GRID_COLOR,
+            domainColor="#64748b",
+            tickColor="#64748b",
+            labelColor=CHART_TEXT_COLOR,
+            titleColor=CHART_TEXT_COLOR,
+            labelFontSize=11,
+            titleFontSize=12,
+            titleFontWeight=600,
+        )
+    )
+
+
+def _render_horizontal_bar_chart(
+    data: pd.DataFrame,
+    value_field: str,
+    value_title: str,
+    color: str,
+    tooltips: List[Any],
+    max_value: Optional[float] = None,
+):
+    """Render a chart directly, never a dataframe fallback, for dashboard telemetry."""
+    axis_kwargs = {
+        "gridColor": CHART_GRID_COLOR,
+        "labelColor": CHART_TEXT_COLOR,
+        "titleColor": CHART_TEXT_COLOR,
     }
+    if value_field == "booking_count":
+        axis_kwargs["tickMinStep"] = 1
+    x_kwargs = {
+        "title": value_title,
+        "axis": alt.Axis(**axis_kwargs),
+    }
+    if max_value is not None:
+        x_kwargs["scale"] = alt.Scale(domain=[0, max_value])
+
+    chart = alt.Chart(data).mark_bar(
+        cornerRadiusTopRight=6,
+        cornerRadiusBottomRight=6,
+        color=color,
+    ).encode(
+        x=alt.X(f"{value_field}:Q", **x_kwargs),
+        y=alt.Y(
+            "parking_name:N",
+            title="Parking location",
+            sort="-x",
+            axis=alt.Axis(
+                labelLimit=500,
+                labelColor=CHART_TEXT_COLOR,
+                titleColor=CHART_TEXT_COLOR,
+                labelFontSize=10,
+                labelFontWeight="bold",
+                labelPadding=8,
+            ),
+        ),
+        tooltip=tooltips,
+    ).properties(height=max(360, len(data) * 25), width=420)
+    chart = _configure_light_chart(chart)
+    st.altair_chart(chart, use_container_width=True)
+
+
+def _render_chart_key(items: List[tuple[str, str]]):
+    """Render a compact, always-visible colour key below a telemetry chart."""
+    key_html = "".join(
+        f'<span style="display:inline-flex;align-items:center;gap:5px;margin:6px 12px 0 0;color:#cbd5e1;font-size:0.78rem;font-weight:700;">'
+        f'<span style="width:9px;height:9px;border-radius:50%;background:{color};display:inline-block;"></span>{label}</span>'
+        for label, color in items
+    )
+    st.markdown(f'<div style="margin:2px 0 10px 0;line-height:1.5;">{key_html}</div>', unsafe_allow_html=True)
 
 
 def render_admin_dashboard():
@@ -45,15 +114,15 @@ def render_admin_dashboard():
 
     # 1. Role-Checked Security Gate
     if not token or not user:
-        st.warning("⚠️ Please log in to access the system.")
+        st.warning(" Please log in to access the system.")
         st.session_state["active_page"] = "login"
         st.rerun()
         return
 
     user_role = str(user.get("role", "user")).lower()
     if user_role != "admin":
-        st.error("⛔ Access Denied: Administrator role required to view this dashboard.")
-        if st.button("⬅️ Return to User Dashboard", type="primary"):
+        st.error(" Access Denied: Administrator role required to view this dashboard.")
+        if st.button(":material/dashboard: Return to User Dashboard", type="primary"):
             st.session_state["active_page"] = "dashboard"
             st.rerun()
         return
@@ -66,7 +135,7 @@ def render_admin_dashboard():
             <div style="margin-bottom: 20px;">
                 <div style="display: flex; align-items: center; gap: 12px;">
                     <h1 style="color: #f8fafc; font-size: 2.1rem; font-weight: 800; margin: 0;">
-                        🛡️ System Admin Dashboard
+                        <span class="material-symbols-rounded">admin_panel_settings</span> System Admin Dashboard
                     </h1>
                     <span style="background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.5); padding: 3px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">
                         SUPERADMIN
@@ -81,24 +150,24 @@ def render_admin_dashboard():
         )
     with col_hdr2:
         st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
-        if st.button("🔄 Refresh Live Data", use_container_width=True, type="primary"):
+        if st.button(":material/refresh: Refresh Live Data", use_container_width=True, type="primary"):
             st.rerun()
 
     # Load initial live dashboard statistics
     stats_res = api.get_admin_dashboard_stats(token)
     if not stats_res.get("success"):
-        st.error(f"❌ Failed to load live dashboard metrics: {stats_res.get('error')}")
+        st.error(f" Failed to load live dashboard metrics: {stats_res.get('error')}")
         return
 
     stats: Dict[str, Any] = stats_res.get("data", {})
 
     # Create organized tabs for clean modular layout
     tab_overview, tab_users, tab_parking, tab_bookings, tab_reports = st.tabs([
-        "📊 System Overview",
-        "👥 User Management",
-        "🅿️ Parking Monitoring",
-        "📅 Booking Monitoring",
-        "📈 Reports & Analytics"
+        " System Overview",
+        " User Management",
+        " Parking Monitoring",
+        " Booking Monitoring",
+        " Reports & Analytics"
     ])
 
     # =========================================================================
@@ -111,25 +180,25 @@ def render_admin_dashboard():
         c1, c2, c3, c4 = st.columns(4)
         with c1:
             st.metric(
-                label="👥 Total Users",
+                label=" Total Users",
                 value=stats.get("total_users", 0),
                 help="Total registered accounts in the system"
             )
         with c2:
             st.metric(
-                label="🏢 Parking Locations",
+                label=" Parking Locations",
                 value=stats.get("total_parking_locations", 0),
                 help="Total active and managed parking facilities"
             )
         with c3:
             st.metric(
-                label="🚗 Total Slots",
+                label=" Total Slots",
                 value=stats.get("total_slots", 0),
                 help="Aggregate parking capacity across all facilities"
             )
         with c4:
             st.metric(
-                label="📋 Total Bookings",
+                label=" Total Bookings",
                 value=stats.get("total_bookings", 0),
                 help="All-time booking reservations placed"
             )
@@ -138,14 +207,14 @@ def render_admin_dashboard():
         c5, c6, c7, c8 = st.columns(4)
         with c5:
             st.metric(
-                label="🟢 Available Slots",
+                label=" Available Slots",
                 value=stats.get("available_slots", 0),
                 delta=f"{round(stats.get('available_slots', 0) / max(stats.get('total_slots', 1), 1) * 100, 1)}% free" if stats.get("total_slots", 0) > 0 else None,
                 help="Currently open slots ready for immediate booking"
             )
         with c6:
             st.metric(
-                label="🔴 Occupied Slots",
+                label=" Occupied Slots",
                 value=stats.get("occupied_slots", 0),
                 delta=f"{round(stats.get('occupied_slots', 0) / max(stats.get('total_slots', 1), 1) * 100, 1)}% busy" if stats.get("total_slots", 0) > 0 else None,
                 delta_color="inverse",
@@ -153,13 +222,13 @@ def render_admin_dashboard():
             )
         with c7:
             st.metric(
-                label="🟡 Reserved Slots",
+                label=" Reserved Slots",
                 value=stats.get("reserved_slots", 0),
                 help="Slots reserved for upcoming confirmed bookings"
             )
         with c8:
             st.metric(
-                label="🔧 Maintenance Slots",
+                label=" Maintenance Slots",
                 value=stats.get("maintenance_slots", 0),
                 help="Slots offline for inspection or repair"
             )
@@ -173,100 +242,52 @@ def render_admin_dashboard():
 
         chart_row1_col1, chart_row1_col2 = st.columns(2)
         
-        # CHART 1: Parking-Wise Occupancy Rate (%) — Horizontal Bar Chart with full facility names
+        # CHART 1: Parking-Wise Occupancy Rate (%)  Horizontal Bar Chart with full facility names
         with chart_row1_col1:
-            st.markdown("##### 📍 1. Parking-Wise Occupancy Rate (%)")
+            st.markdown("#####  1. Parking-Wise Occupancy Rate (%)")
             occ_list = reports_data.get("parking_occupancy_list", [])
             if occ_list:
                 df_occ = pd.DataFrame(occ_list)
                 df_occ["occupancy_rate"] = df_occ["occupancy_rate"].astype(float)
                 
-                chart_occ = alt.Chart(df_occ).mark_bar(
-                    cornerRadiusTopRight=6,
-                    cornerRadiusBottomRight=6,
-                    color="#38bdf8"
-                ).encode(
-                    x=alt.X(
-                        "occupancy_rate:Q",
-                        title="Occupancy Rate (%)",
-                        scale=alt.Scale(domain=[0, 100]),
-                        axis=alt.Axis(gridColor="rgba(148, 163, 184, 0.12)", labelColor="#cbd5e1", titleColor="#94a3b8")
-                    ),
-                    y=alt.Y(
-                        "parking_name:N",
-                        title="",
-                        sort="-x",
-                        axis=alt.Axis(
-                            labelLimit=350,
-                            labelColor="#f1f5f9",
-                            labelFontSize=11.5,
-                            labelFontWeight="bold"
-                        )
-                    ),
-                    tooltip=[
+                _render_horizontal_bar_chart(
+                    df_occ, "occupancy_rate", "Occupancy Rate (%)", OCCUPANCY_COLOR, [
                         alt.Tooltip("parking_name:N", title="Facility"),
                         alt.Tooltip("area:N", title="Area"),
                         alt.Tooltip("occupancy_rate:Q", title="Occupancy (%)", format=".1f"),
                         alt.Tooltip("occupied_slots:Q", title="Occupied Slots"),
-                        alt.Tooltip("total_slots:Q", title="Total Slots")
-                    ]
-                ).properties(height=260).configure_view(strokeWidth=0)
-                
-                st.altair_chart(chart_occ, use_container_width=True)
+                        alt.Tooltip("total_slots:Q", title="Total Slots"),
+                    ], max_value=100,
+                )
+                _render_chart_key([("Occupancy rate", OCCUPANCY_COLOR)])
             else:
                 st.info("No parking location occupancy data available.")
 
-        # CHART 2: Bookings by Parking Location — Horizontal Bar Chart with full facility names
+        # CHART 2: Bookings by Parking Location  Horizontal Bar Chart with full facility names
         with chart_row1_col2:
-            st.markdown("##### 📈 2. Bookings by Parking Location")
+            st.markdown("#####  2. Bookings by Parking Location")
             loc_bookings = reports_data.get("bookings_by_parking", [])
             if loc_bookings:
                 df_loc_b = pd.DataFrame(loc_bookings)
                 df_loc_b["booking_count"] = df_loc_b["booking_count"].astype(int)
 
-                chart_loc_b = alt.Chart(df_loc_b).mark_bar(
-                    cornerRadiusTopRight=6,
-                    cornerRadiusBottomRight=6,
-                    color="#818cf8"
-                ).encode(
-                    x=alt.X(
-                        "booking_count:Q",
-                        title="Total Bookings",
-                        axis=alt.Axis(
-                            tickMinStep=1,
-                            gridColor="rgba(148, 163, 184, 0.12)",
-                            labelColor="#cbd5e1",
-                            titleColor="#94a3b8"
-                        )
-                    ),
-                    y=alt.Y(
-                        "parking_name:N",
-                        title="",
-                        sort="-x",
-                        axis=alt.Axis(
-                            labelLimit=350,
-                            labelColor="#f1f5f9",
-                            labelFontSize=11.5,
-                            labelFontWeight="bold"
-                        )
-                    ),
-                    tooltip=[
+                _render_horizontal_bar_chart(
+                    df_loc_b, "booking_count", "Total Bookings", BOOKINGS_COLOR, [
                         alt.Tooltip("parking_name:N", title="Facility"),
                         alt.Tooltip("area:N", title="Area"),
-                        alt.Tooltip("booking_count:Q", title="Total Bookings")
-                    ]
-                ).properties(height=260).configure_view(strokeWidth=0)
-
-                st.altair_chart(chart_loc_b, use_container_width=True)
+                        alt.Tooltip("booking_count:Q", title="Total Bookings"),
+                    ],
+                )
+                _render_chart_key([("Bookings", BOOKINGS_COLOR)])
             else:
                 st.info("No booking data per location recorded yet.")
 
         st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
         chart_row2_col1, chart_row2_col2 = st.columns(2)
         
-        # CHART 3: Slot Status Breakdown — Color Coded (Green, Red, Amber, Slate)
+        # CHART 3: Slot Status Breakdown  Color Coded (Green, Red, Amber, Slate)
         with chart_row2_col1:
-            st.markdown("##### 📊 3. Slot Status Breakdown")
+            st.markdown("#####  3. Slot Status Breakdown")
             slot_counts = reports_data.get("slot_status_counts", {
                 "Available": stats.get("available_slots", 0),
                 "Occupied": stats.get("occupied_slots", 0),
@@ -278,8 +299,8 @@ def render_admin_dashboard():
             ])
             
             slot_color_scale = alt.Scale(
-                domain=["Available", "Occupied", "Reserved", "Maintenance"],
-                range=["#10b981", "#ef4444", "#f59e0b", "#64748b"]
+                domain=[label for label, _ in SLOT_STATUS_COLORS],
+                range=[color for _, color in SLOT_STATUS_COLORS],
             )
             
             chart_slot_status = alt.Chart(df_slot_counts).mark_bar(
@@ -289,26 +310,27 @@ def render_admin_dashboard():
                 x=alt.X(
                     "Status:N",
                     title="",
-                    sort=["Available", "Occupied", "Reserved", "Maintenance"],
-                    axis=alt.Axis(labelColor="#f1f5f9", labelFontSize=12, labelFontWeight="bold", labelAngle=0)
+                    sort=[label for label, _ in SLOT_STATUS_COLORS],
+                    axis=alt.Axis(labelColor=CHART_TEXT_COLOR, titleColor=CHART_TEXT_COLOR, labelFontSize=12, labelFontWeight="bold", labelAngle=0)
                 ),
                 y=alt.Y(
                     "Count:Q",
                     title="Number of Slots",
-                    axis=alt.Axis(gridColor="rgba(148, 163, 184, 0.12)", labelColor="#cbd5e1", titleColor="#94a3b8")
+                    axis=alt.Axis(gridColor=CHART_GRID_COLOR, labelColor=CHART_TEXT_COLOR, titleColor=CHART_TEXT_COLOR)
                 ),
                 color=alt.Color("Status:N", scale=slot_color_scale, legend=None),
                 tooltip=[
                     alt.Tooltip("Status:N", title="Slot Status"),
                     alt.Tooltip("Count:Q", title="Total Slots")
                 ]
-            ).properties(height=260).configure_view(strokeWidth=0)
+            ).properties(height=260)
 
-            st.altair_chart(chart_slot_status, use_container_width=True)
+            st.altair_chart(_configure_light_chart(chart_slot_status), use_container_width=True)
+            _render_chart_key(SLOT_STATUS_COLORS)
 
-        # CHART 4: Booking Status Breakdown — Color Coded (Amber, Blue, Green, Red)
+        # CHART 4: Booking Status Breakdown  Color Coded (Amber, Blue, Green, Red)
         with chart_row2_col2:
-            st.markdown("##### 📋 4. Booking Status Breakdown")
+            st.markdown("#####  4. Booking Status Breakdown")
             booking_counts = reports_data.get("booking_status_counts", {
                 "Reserved": 0, "Active": 0, "Completed": 0, "Cancelled": 0
             })
@@ -317,8 +339,8 @@ def render_admin_dashboard():
             ])
 
             booking_color_scale = alt.Scale(
-                domain=["Reserved", "Active", "Completed", "Cancelled"],
-                range=["#f59e0b", "#3b82f6", "#10b981", "#ef4444"]
+                domain=[label for label, _ in BOOKING_STATUS_COLORS],
+                range=[color for _, color in BOOKING_STATUS_COLORS],
             )
 
             chart_booking_status = alt.Chart(df_booking_counts).mark_bar(
@@ -328,40 +350,41 @@ def render_admin_dashboard():
                 x=alt.X(
                     "Status:N",
                     title="",
-                    sort=["Reserved", "Active", "Completed", "Cancelled"],
-                    axis=alt.Axis(labelColor="#f1f5f9", labelFontSize=12, labelFontWeight="bold", labelAngle=0)
+                    sort=[label for label, _ in BOOKING_STATUS_COLORS],
+                    axis=alt.Axis(labelColor=CHART_TEXT_COLOR, titleColor=CHART_TEXT_COLOR, labelFontSize=12, labelFontWeight="bold", labelAngle=0)
                 ),
                 y=alt.Y(
                     "Count:Q",
                     title="Number of Bookings",
-                    axis=alt.Axis(gridColor="rgba(148, 163, 184, 0.12)", labelColor="#cbd5e1", titleColor="#94a3b8")
+                    axis=alt.Axis(gridColor=CHART_GRID_COLOR, labelColor=CHART_TEXT_COLOR, titleColor=CHART_TEXT_COLOR)
                 ),
                 color=alt.Color("Status:N", scale=booking_color_scale, legend=None),
                 tooltip=[
                     alt.Tooltip("Status:N", title="Booking Status"),
                     alt.Tooltip("Count:Q", title="Total Bookings")
                 ]
-            ).properties(height=260).configure_view(strokeWidth=0)
+            ).properties(height=260)
 
-            st.altair_chart(chart_booking_status, use_container_width=True)
+            st.altair_chart(_configure_light_chart(chart_booking_status), use_container_width=True)
+            _render_chart_key(BOOKING_STATUS_COLORS)
 
     # =========================================================================
     # TAB 2: User Management (View All, Details, Activate/Deactivate)
     # =========================================================================
     with tab_users:
-        st.markdown("<h3 style='color: #f1f5f9; font-weight: 700; margin: 8px 0 6px 0;'>👥 User Governance & Management</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 style='color: #f1f5f9; font-weight: 700; margin: 8px 0 6px 0;'> User Governance & Management</h3>", unsafe_allow_html=True)
         st.markdown("<p style='color: #94a3b8; font-size: 0.88rem; margin-bottom: 20px;'>Inspect registered user accounts and toggle operational statuses. Sensitive credentials remain encrypted.</p>", unsafe_allow_html=True)
 
         users_res = api.get_admin_users(token)
         if not users_res.get("success"):
-            st.error(f"❌ Failed to fetch user records: {users_res.get('error')}")
+            st.error(f" Failed to fetch user records: {users_res.get('error')}")
         else:
             users_list = users_res.get("data", [])
 
             # Filter controls
             col_uf1, col_uf2, col_uf3 = st.columns([2, 1, 1])
             with col_uf1:
-                search_user_query = st.text_input("🔍 Search Users (Name or Email)", placeholder="Type name or email...").strip().lower()
+                search_user_query = st.text_input(" Search Users (Name or Email)", placeholder="Type name or email...").strip().lower()
             with col_uf2:
                 role_filter = st.selectbox("Filter Role", ["All Roles", "user", "manager", "admin"])
             with col_uf3:
@@ -392,9 +415,9 @@ def render_admin_dashboard():
                         "User ID": u.get("user_id"),
                         "Full Name": u.get("name"),
                         "Email Address": u.get("email"),
-                        "Phone": u.get("phone") or "—",
+                        "Phone": u.get("phone") or "",
                         "Role": u.get("role", "").upper(),
-                        "Account Status": "🟢 Active" if u.get("status") == "active" else "🔴 Inactive",
+                        "Account Status": " Active" if u.get("status") == "active" else " Inactive",
                         "Joined Date": created_str
                     })
 
@@ -402,9 +425,9 @@ def render_admin_dashboard():
                 st.dataframe(df_users_display, use_container_width=True, hide_index=True)
 
                 st.markdown("<hr style='border: 0; border-top: 1px solid rgba(148, 163, 184, 0.15); margin: 20px 0;'>", unsafe_allow_html=True)
-                st.markdown("#### ⚡ Manage User Account Status")
+                st.markdown("####  Manage User Account Status")
 
-                user_options = {f"ID #{u['user_id']} — {u['name']} ({u['email']}) [{u['status'].upper()}]": u for u in filtered_users}
+                user_options = {f"ID #{u['user_id']}  {u['name']} ({u['email']}) [{u['status'].upper()}]": u for u in filtered_users}
                 selected_user_label = st.selectbox("Select User Account to Inspect or Update", list(user_options.keys()))
                 target_user = user_options[selected_user_label]
 
@@ -424,7 +447,7 @@ def render_admin_dashboard():
                             line-height: 1.6;
                             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
                         ">
-                            <h4 style="color: #60a5fa; margin: 0 0 10px 0; font-size: 1.1rem; font-weight: 800;">👤 User Profile Details</h4>
+                            <h4 style="color: #60a5fa; margin: 0 0 10px 0; font-size: 1.1rem; font-weight: 800;"> User Profile Details</h4>
                             <div style="color: #f1f5f9; font-size: 0.92rem;">
                                 <strong>User ID:</strong> #{target_user.get('user_id')}<br>
                                 <strong>Name:</strong> {target_user.get('name')}<br>
@@ -450,9 +473,9 @@ def render_admin_dashboard():
                     if current_stat == "active":
                         st.markdown("<p style='color: #cbd5e1; font-size: 0.85rem;'>This account is currently active and permitted to login.</p>", unsafe_allow_html=True)
                         if is_self:
-                            st.info("🔒 You cannot deactivate your own admin account.")
+                            st.info(" You cannot deactivate your own admin account.")
                         else:
-                            if st.button("🚫 Deactivate Account", type="secondary", use_container_width=True):
+                            if st.button(":material/person_off: Deactivate Account", type="secondary", use_container_width=True):
                                 update_res = api.update_admin_user_status(token, target_user["user_id"], "inactive")
                                 if update_res.get("success"):
                                     st.success(f"User #{target_user['user_id']} has been deactivated successfully.")
@@ -461,7 +484,7 @@ def render_admin_dashboard():
                                     st.error(f"Error deactivating user: {update_res.get('error')}")
                     else:
                         st.markdown("<p style='color: #f87171; font-size: 0.85rem; font-weight: 600;'>This account is currently inactive (login blocked).</p>", unsafe_allow_html=True)
-                        if st.button("✅ Activate Account", type="primary", use_container_width=True):
+                        if st.button(":material/person_check: Activate Account", type="primary", use_container_width=True):
                             update_res = api.update_admin_user_status(token, target_user["user_id"], "active")
                             if update_res.get("success"):
                                 st.success(f"User #{target_user['user_id']} has been activated successfully.")
@@ -475,12 +498,12 @@ def render_admin_dashboard():
     # TAB 3: Parking Monitoring (Read-Only)
     # =========================================================================
     with tab_parking:
-        st.markdown("<h3 style='color: #f1f5f9; font-weight: 700; margin: 8px 0 6px 0;'>🅿️ Parking Location Telemetry & Monitoring</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 style='color: #f1f5f9; font-weight: 700; margin: 8px 0 6px 0;'> Parking Location Telemetry & Monitoring</h3>", unsafe_allow_html=True)
         st.markdown("<p style='color: #94a3b8; font-size: 0.88rem; margin-bottom: 20px;'>Live capacity distribution, fee configuration, and operational status across all facilities (Read-Only).</p>", unsafe_allow_html=True)
 
         parking_res = api.get_admin_parking_summary(token)
         if not parking_res.get("success"):
-            st.error(f"❌ Failed to retrieve parking summaries: {parking_res.get('error')}")
+            st.error(f" Failed to retrieve parking summaries: {parking_res.get('error')}")
         else:
             parking_list = parking_res.get("data", [])
 
@@ -508,14 +531,14 @@ def render_admin_dashboard():
                     "Facility Name": p.get("parking_name"),
                     "Area": p.get("area"),
                     "Total Slots": p.get("total_slots", 0),
-                    "🟢 Available": p.get("available_slots", 0),
-                    "🔴 Occupied": p.get("occupied_slots", 0),
-                    "🟡 Reserved": p.get("reserved_slots", 0),
-                    "🔧 Maint.": p.get("maintenance_slots", 0),
+                    " Available": p.get("available_slots", 0),
+                    " Occupied": p.get("occupied_slots", 0),
+                    " Reserved": p.get("reserved_slots", 0),
+                    " Maint.": p.get("maintenance_slots", 0),
                     "Occupancy": f"{p.get('occupancy_rate', 0)}%",
                     "Total Bookings": p.get("total_bookings", 0),
-                    "Hourly Fee": f"₹{p.get('parking_fee', 0.0):.2f}",
-                    "Status": "🟢 Active" if p.get("status") == "active" else "🔴 Inactive"
+                    "Hourly Fee": f"{p.get('parking_fee', 0.0):.2f}",
+                    "Status": " Active" if p.get("status") == "active" else " Inactive"
                 })
 
             if p_table_rows:
@@ -523,9 +546,9 @@ def render_admin_dashboard():
                 st.dataframe(df_parking_display, use_container_width=True, hide_index=True)
 
                 st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
-                st.markdown("#### 🔍 Facility Details Inspector")
+                st.markdown("####  Facility Details Inspector")
 
-                p_options = {f"#{p['parking_id']} — {p['parking_name']} ({p['area']})": p for p in filtered_parking}
+                p_options = {f"#{p['parking_id']}  {p['parking_name']} ({p['area']})": p for p in filtered_parking}
                 chosen_p_label = st.selectbox("Select Facility for Deep Inspection", list(p_options.keys()))
                 chosen_p = p_options[chosen_p_label]
 
@@ -534,13 +557,13 @@ def render_admin_dashboard():
                     st.markdown(
                         f"""
                         <div style="background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(148, 163, 184, 0.22); border-radius: 10px; padding: 16px 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
-                            <h5 style="color: #60a5fa; margin: 0 0 8px 0; font-weight: 700;">📍 Location Information</h5>
+                            <h5 style="color: #60a5fa; margin: 0 0 8px 0; font-weight: 700;"> Location Information</h5>
                             <p style="color: #f1f5f9; font-size: 0.88rem; margin: 0; line-height: 1.6;">
                                 <strong>Facility:</strong> {chosen_p.get('parking_name')}<br>
                                 <strong>Area:</strong> {chosen_p.get('area')}<br>
                                 <strong>Address:</strong> {chosen_p.get('address') or 'N/A'}<br>
-                                <strong>Hourly Rate:</strong> ₹{chosen_p.get('parking_fee', 0):.2f}/hr<br>
-                                <strong>Hours:</strong> {chosen_p.get('opening_time') or '24/7'} – {chosen_p.get('closing_time') or '24/7'}
+                                <strong>Hourly Rate:</strong> {chosen_p.get('parking_fee', 0):.2f}/hr<br>
+                                <strong>Hours:</strong> {chosen_p.get('opening_time') or '24/7'}  {chosen_p.get('closing_time') or '24/7'}
                             </p>
                         </div>
                         """,
@@ -550,10 +573,10 @@ def render_admin_dashboard():
                     st.markdown(
                         f"""
                         <div style="background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(148, 163, 184, 0.22); border-radius: 10px; padding: 16px 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
-                            <h5 style="color: #34d399; margin: 0 0 8px 0; font-weight: 700;">⚡ Amenities & Status</h5>
+                            <h5 style="color: #34d399; margin: 0 0 8px 0; font-weight: 700;"> Amenities & Status</h5>
                             <p style="color: #f1f5f9; font-size: 0.88rem; margin: 0; line-height: 1.6;">
-                                <strong>EV Charging:</strong> {'⚡ Yes' if chosen_p.get('ev_available') else '❌ No'}<br>
-                                <strong>Accessible Parking:</strong> {'♿ Yes' if chosen_p.get('accessible_available') else '❌ No'}<br>
+                                <strong>EV Charging:</strong> {' Yes' if chosen_p.get('ev_available') else ' No'}<br>
+                                <strong>Accessible Parking:</strong> {' Yes' if chosen_p.get('accessible_available') else ' No'}<br>
                                 <strong>Facility Status:</strong> <span style="color: {'#34d399' if chosen_p.get('status') == 'active' else '#f87171'}; font-weight: 700;">{chosen_p.get('status', '').upper()}</span><br>
                                 <strong>Total Lifetime Bookings:</strong> {chosen_p.get('total_bookings', 0)}
                             </p>
@@ -565,12 +588,12 @@ def render_admin_dashboard():
                     st.markdown(
                         f"""
                         <div style="background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(148, 163, 184, 0.22); border-radius: 10px; padding: 16px 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
-                            <h5 style="color: #fbbf24; margin: 0 0 8px 0; font-weight: 700;">📊 Slot Breakdown</h5>
+                            <h5 style="color: #fbbf24; margin: 0 0 8px 0; font-weight: 700;"> Slot Breakdown</h5>
                             <p style="color: #f1f5f9; font-size: 0.88rem; margin: 0; line-height: 1.6;">
                                 <strong>Total Capacity:</strong> {chosen_p.get('total_slots', 0)} slots<br>
-                                <strong>🟢 Available:</strong> {chosen_p.get('available_slots', 0)}<br>
-                                <strong>🔴 Occupied:</strong> {chosen_p.get('occupied_slots', 0)}<br>
-                                <strong>🟡 Reserved:</strong> {chosen_p.get('reserved_slots', 0)}<br>
+                                <strong> Available:</strong> {chosen_p.get('available_slots', 0)}<br>
+                                <strong> Occupied:</strong> {chosen_p.get('occupied_slots', 0)}<br>
+                                <strong> Reserved:</strong> {chosen_p.get('reserved_slots', 0)}<br>
                                 <strong>Occupancy Rate:</strong> {chosen_p.get('occupancy_rate', 0)}%
                             </p>
                         </div>
@@ -584,20 +607,20 @@ def render_admin_dashboard():
     # TAB 4: Booking Monitoring (Read-Only)
     # =========================================================================
     with tab_bookings:
-        st.markdown("<h3 style='color: #f1f5f9; font-weight: 700; margin: 8px 0 6px 0;'>📅 Booking Audit & Monitoring</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 style='color: #f1f5f9; font-weight: 700; margin: 8px 0 6px 0;'> Booking Audit & Monitoring</h3>", unsafe_allow_html=True)
         st.markdown("<p style='color: #94a3b8; font-size: 0.88rem; margin-bottom: 20px;'>Search and filter live reservations and parking sessions (Read-Only).</p>", unsafe_allow_html=True)
 
         # Filters: Search by booking ID, filter by parking location, status
         col_bf1, col_bf2, col_bf3 = st.columns([1, 2, 1])
         with col_bf1:
-            search_bid = st.text_input("🔍 Search Booking ID", placeholder="e.g. 1").strip()
+            search_bid = st.text_input(" Search Booking ID", placeholder="e.g. 1").strip()
             search_bid_int = int(search_bid) if search_bid.isdigit() else None
         with col_bf2:
             p_res = api.get_admin_parking_summary(token)
             p_list = p_res.get("data", []) if p_res.get("success") else []
             p_filter_opts = {"All Locations": None}
             for p in p_list:
-                p_filter_opts[f"#{p['parking_id']} — {p['parking_name']} ({p['area']})"] = p["parking_id"]
+                p_filter_opts[f"#{p['parking_id']}  {p['parking_name']} ({p['area']})"] = p["parking_id"]
             selected_p_label_filter = st.selectbox("Filter Parking Location", list(p_filter_opts.keys()))
             chosen_pid = p_filter_opts[selected_p_label_filter]
         with col_bf3:
@@ -612,7 +635,7 @@ def render_admin_dashboard():
         )
 
         if not bookings_res.get("success"):
-            st.error(f"❌ Failed to load bookings: {bookings_res.get('error')}")
+            st.error(f" Failed to load bookings: {bookings_res.get('error')}")
         else:
             b_data = bookings_res.get("data", {})
             bookings_list = b_data.get("bookings", [])
@@ -630,16 +653,16 @@ def render_admin_dashboard():
                         Total: <strong>{b_data.get('total_bookings', 0)}</strong>
                     </span>
                     <span style="background: rgba(245, 158, 11, 0.2); border: 1px solid rgba(245, 158, 11, 0.4); padding: 5px 14px; border-radius: 8px; font-size: 0.82rem; color: #fde68a; font-weight: 700;">
-                        🟡 Reserved: <strong>{b_data.get('reserved_count', 0)}</strong>
+                         Reserved: <strong>{b_data.get('reserved_count', 0)}</strong>
                     </span>
                     <span style="background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.4); padding: 5px 14px; border-radius: 8px; font-size: 0.82rem; color: #60a5fa; font-weight: 700;">
-                        🔵 Active: <strong>{b_data.get('active_count', 0)}</strong>
+                         Active: <strong>{b_data.get('active_count', 0)}</strong>
                     </span>
                     <span style="background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.4); padding: 5px 14px; border-radius: 8px; font-size: 0.82rem; color: #6ee7b7; font-weight: 700;">
-                        🟢 Completed: <strong>{b_data.get('completed_count', 0)}</strong>
+                         Completed: <strong>{b_data.get('completed_count', 0)}</strong>
                     </span>
                     <span style="background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); padding: 5px 14px; border-radius: 8px; font-size: 0.82rem; color: #fca5a5; font-weight: 700;">
-                        🔴 Cancelled: <strong>{b_data.get('cancelled_count', 0)}</strong>
+                         Cancelled: <strong>{b_data.get('cancelled_count', 0)}</strong>
                     </span>
                 </div>
                 """,
@@ -662,10 +685,10 @@ def render_admin_dashboard():
                         pass
 
                     status_badge = {
-                        "reserved": "🟡 Reserved",
-                        "active": "🔵 Active",
-                        "completed": "🟢 Completed",
-                        "cancelled": "🔴 Cancelled"
+                        "reserved": " Reserved",
+                        "active": " Active",
+                        "completed": " Completed",
+                        "cancelled": " Cancelled"
                     }.get(b.get("status", "").lower(), b.get("status", "").upper())
 
                     b_table_rows.append({
@@ -675,7 +698,7 @@ def render_admin_dashboard():
                         "Parking Facility": f"{b.get('parking_name')} ({b.get('area')})",
                         "Slot": f"{b.get('slot_number')} ({b.get('slot_type')})",
                         "Date": str(b.get("booking_date")),
-                        "Schedule": f"{start_str} – {end_str}",
+                        "Schedule": f"{start_str}  {end_str}",
                         "Status": status_badge,
                         "Booked On": created_str
                     })
@@ -689,12 +712,12 @@ def render_admin_dashboard():
     # TAB 5: Reports & Analytics
     # =========================================================================
     with tab_reports:
-        st.markdown("<h3 style='color: #f1f5f9; font-weight: 700; margin: 8px 0 6px 0;'>📈 Analytical Reports & Utilization Intelligence</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 style='color: #f1f5f9; font-weight: 700; margin: 8px 0 6px 0;'> Analytical Reports & Utilization Intelligence</h3>", unsafe_allow_html=True)
         st.markdown("<p style='color: #94a3b8; font-size: 0.88rem; margin-bottom: 20px;'>Live aggregated insights, facility demand ranking, and system-wide capacity metrics.</p>", unsafe_allow_html=True)
 
         rep_res = api.get_admin_reports(token)
         if not rep_res.get("success"):
-            st.error(f"❌ Failed to compute reports: {rep_res.get('error')}")
+            st.error(f" Failed to compute reports: {rep_res.get('error')}")
         else:
             r_data = rep_res.get("data", {})
 
@@ -714,12 +737,12 @@ def render_admin_dashboard():
             # Report 1: Most-Used Parking Facilities Leaderboard
             col_rep1, col_rep2 = st.columns([1.2, 1])
             with col_rep1:
-                st.markdown("#### 🏆 Most-Used Parking Locations (By Total Bookings)")
+                st.markdown("####  Most-Used Parking Locations (By Total Bookings)")
                 most_used = r_data.get("most_used_parking", [])
                 if most_used:
                     mu_rows = []
                     for rank, item in enumerate(most_used, start=1):
-                        medal = "🥇" if rank == 1 else "🥈" if rank == 2 else "🥉" if rank == 3 else f"#{rank}"
+                        medal = "" if rank == 1 else "" if rank == 2 else "" if rank == 3 else f"#{rank}"
                         mu_rows.append({
                             "Rank": medal,
                             "Facility Name": item.get("parking_name"),
@@ -732,14 +755,14 @@ def render_admin_dashboard():
                     st.info("No bookings recorded yet to determine top facilities.")
 
             with col_rep2:
-                st.markdown("#### 📊 System Slot Utilization Breakdown")
+                st.markdown("####  System Slot Utilization Breakdown")
                 slot_breakdown = r_data.get("slot_status_counts", {})
                 if slot_breakdown:
                     sb_rows = [
-                        {"Status": "🟢 Available (Free)", "Slots": slot_breakdown.get("Available", 0)},
-                        {"Status": "🔴 Occupied (Active Check-In)", "Slots": slot_breakdown.get("Occupied", 0)},
-                        {"Status": "🟡 Reserved (Pre-Booked)", "Slots": slot_breakdown.get("Reserved", 0)},
-                        {"Status": "🔧 Maintenance", "Slots": slot_breakdown.get("Maintenance", 0)}
+                        {"Status": " Available (Free)", "Slots": slot_breakdown.get("Available", 0)},
+                        {"Status": " Occupied (Active Check-In)", "Slots": slot_breakdown.get("Occupied", 0)},
+                        {"Status": " Reserved (Pre-Booked)", "Slots": slot_breakdown.get("Reserved", 0)},
+                        {"Status": " Maintenance", "Slots": slot_breakdown.get("Maintenance", 0)}
                     ]
                     df_sb = pd.DataFrame(sb_rows)
                     st.dataframe(df_sb, use_container_width=True, hide_index=True)
@@ -747,7 +770,7 @@ def render_admin_dashboard():
             st.markdown("<hr style='border: 0; border-top: 1px solid rgba(148, 163, 184, 0.15); margin: 24px 0;'>", unsafe_allow_html=True)
 
             # Report 2: Full Per-Location Occupancy & Capacity Ledger
-            st.markdown("#### 📍 Facility-by-Facility Occupancy & Slot Availability Ledger")
+            st.markdown("####  Facility-by-Facility Occupancy & Slot Availability Ledger")
             p_occ_list = r_data.get("parking_occupancy_list", [])
             if p_occ_list:
                 occ_ledger_rows = []
@@ -757,9 +780,9 @@ def render_admin_dashboard():
                         "Facility Name": p.get("parking_name"),
                         "Area": p.get("area"),
                         "Total Slots": p.get("total_slots", 0),
-                        "🟢 Available": p.get("available_slots", 0),
-                        "🔴 Occupied": p.get("occupied_slots", 0),
-                        "🟡 Reserved": p.get("reserved_slots", 0),
+                        " Available": p.get("available_slots", 0),
+                        " Occupied": p.get("occupied_slots", 0),
+                        " Reserved": p.get("reserved_slots", 0),
                         "Occupancy Rate": f"{p.get('occupancy_rate', 0)}%"
                     })
                 df_occ_ledger = pd.DataFrame(occ_ledger_rows)

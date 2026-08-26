@@ -1,9 +1,9 @@
 """
-session_reminder.py — Shared in-app reminder component (Feature 1).
+session_reminder.py  Shared in-app reminder component (Feature 1).
 
 Renders checkout reminders for users who have an active parking session.
-Reads existing check_in + booking end_time fields — no new backend logic.
-Only uses st.markdown with custom HTML — no push notifications.
+Reads existing check_in + booking end_time fields  no new backend logic.
+Only uses st.markdown with custom HTML  no push notifications.
 """
 import streamlit as st
 from datetime import datetime
@@ -18,9 +18,9 @@ def render_session_reminder(token: str) -> Optional[dict]:
 
     Returns the active session dict if found, or None.
     Shows:
-      - info   → session active, time remaining
-      - warning → within 15 minutes of end_time
-      - error  → end_time has already passed (overtime)
+      - info    session active, time remaining
+      - warning  within 15 minutes of end_time
+      - error   end_time has already passed (overtime)
 
     Does NOT auto checkout, does NOT change slot/booking status.
     """
@@ -65,7 +65,7 @@ def render_session_reminder(token: str) -> Optional[dict]:
     slot_number = active_session.get("slot_number", "N/A")
 
     if end_time is None:
-        # No end_time available — show generic active session reminder
+        # No end_time available  show generic active session reminder
         st.markdown(
             f"""
             <div style="
@@ -79,7 +79,7 @@ def render_session_reminder(token: str) -> Optional[dict]:
                 align-items: flex-start;
                 gap: 12px;
             ">
-                <span style="font-size: 1.4rem; line-height: 1;">🔔</span>
+                <span class="material-symbols-rounded" style="font-size: 1.4rem; line-height: 1;">notifications</span>
                 <div>
                     <div style="color: #38bdf8; font-weight: 700; font-size: 0.92rem; margin-bottom: 3px;">
                         Active Parking Session
@@ -99,7 +99,7 @@ def render_session_reminder(token: str) -> Optional[dict]:
     minutes_remaining = (end_time - now).total_seconds() / 60
 
     if minutes_remaining < 0:
-        # Overtime — red alert
+        # Overtime  red alert
         overtime_mins = abs(int(minutes_remaining))
         st.markdown(
             f"""
@@ -114,10 +114,10 @@ def render_session_reminder(token: str) -> Optional[dict]:
                 align-items: flex-start;
                 gap: 12px;
             ">
-                <span style="font-size: 1.4rem; line-height: 1;">⚠️</span>
+                <span class="material-symbols-rounded" style="font-size: 1.4rem; line-height: 1;">warning</span>
                 <div>
                     <div style="color: #f87171; font-weight: 700; font-size: 0.92rem; margin-bottom: 3px;">
-                        Parking Time Has Ended — Overtime!
+                        Parking Time Has Ended  Overtime!
                     </div>
                     <div style="color: #cbd5e1; font-size: 0.88rem; line-height: 1.5;">
                         You have been parked at <strong style="color: #f1f5f9;">{parking_name}</strong>
@@ -146,7 +146,7 @@ def render_session_reminder(token: str) -> Optional[dict]:
                 align-items: flex-start;
                 gap: 12px;
             ">
-                <span style="font-size: 1.4rem; line-height: 1;">⏰</span>
+                <span class="material-symbols-rounded" style="font-size: 1.4rem; line-height: 1;">schedule</span>
                 <div>
                     <div style="color: #fbbf24; font-weight: 700; font-size: 0.92rem; margin-bottom: 3px;">
                         Parking Time Ending Soon!
@@ -163,7 +163,7 @@ def render_session_reminder(token: str) -> Optional[dict]:
             unsafe_allow_html=True
         )
     else:
-        # Normal active session — info blue
+        # Normal active session  info blue
         hours_left = int(minutes_remaining // 60)
         mins_left = int(minutes_remaining % 60)
         time_str = f"{hours_left}h {mins_left}m" if hours_left > 0 else f"{mins_left}m"
@@ -180,7 +180,7 @@ def render_session_reminder(token: str) -> Optional[dict]:
                 align-items: flex-start;
                 gap: 12px;
             ">
-                <span style="font-size: 1.4rem; line-height: 1;">🔔</span>
+                <span class="material-symbols-rounded" style="font-size: 1.4rem; line-height: 1;">notifications</span>
                 <div>
                     <div style="color: #38bdf8; font-weight: 700; font-size: 0.92rem; margin-bottom: 3px;">
                         Active Parking Session

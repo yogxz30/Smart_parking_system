@@ -25,7 +25,7 @@ def render_sidebar(current_user: Optional[Dict[str, Any]] = None):
                     font-size: 1.8rem;
                     margin-bottom: 8px;
                 ">
-                    🅿️
+                    <span class="material-symbols-rounded">local_parking</span>
                 </div>
                 <h2 style="color: #f8fafc; font-size: 1.25rem; font-weight: 700; margin: 0;">Smart Parking</h2>
                 <p style="color: #60a5fa; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin: 2px 0 0 0;">
@@ -88,16 +88,16 @@ def render_sidebar(current_user: Optional[Dict[str, Any]] = None):
         st.markdown("<p style='color: #64748b; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px;'>Navigation</p>", unsafe_allow_html=True)
         
         pages = {
-            "dashboard": ("🏠 User Dashboard", "dashboard"),
-            "search": ("🔍 Find Parking", "search"),
-            "my_bookings": ("📅 My Bookings", "my_bookings"),
-            "profile": ("👤 User Profile", "profile")
+            "dashboard": (":material/dashboard: User Dashboard", "dashboard"),
+            "search": (":material/search: Find Parking", "search"),
+            "my_bookings": (":material/calendar_month: My Bookings", "my_bookings"),
+            "profile": (":material/person: User Profile", "profile")
         }
         role = str(current_user.get("role", "user")).lower() if current_user else "user"
         if role in {"manager", "admin"}:
-            pages["parking_management"] = ("🅿️ Parking Management", "parking_management")
+            pages["parking_management"] = (":material/local_parking: Parking Management", "parking_management")
         if role == "admin":
-            pages["admin_dashboard"] = ("🛡️ Admin Dashboard", "admin_dashboard")
+            pages["admin_dashboard"] = (":material/admin_panel_settings: Admin Dashboard", "admin_dashboard")
 
 
         # Determine current active page
@@ -117,7 +117,7 @@ def render_sidebar(current_user: Optional[Dict[str, Any]] = None):
                     align-items: center;
                     gap: 8px;
                 ">
-                    <span style="font-size: 1rem;">🎫</span>
+                    <span class="material-symbols-rounded" style="font-size: 1rem;">pending_actions</span>
                     <span style="color: #93c5fd; font-weight: 600; font-size: 0.8rem;">Booking in Progress</span>
                 </div>
                 """,
@@ -159,6 +159,6 @@ def render_sidebar(current_user: Optional[Dict[str, Any]] = None):
         )
 
         # Logout Button
-        if st.button("🚪 Log Out", use_container_width=True, type="secondary"):
+        if st.button(":material/logout: Log Out", use_container_width=True, type="secondary"):
             st.session_state.clear()
             st.rerun()

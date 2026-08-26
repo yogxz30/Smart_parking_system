@@ -9,15 +9,15 @@ def render_parking_search():
     """
     Renders the Parking Search and Real-Time Slot Explorer page with
     area proximity sorting, amenity filters, and interactive slot selection.
-    Feature 4: Favorite/saved parking (⭐ toggle) + My Favorites section.
-    Feature 5: EV/accessible filters — already implemented, preserved as-is.
+    Feature 4: Favorite/saved parking ( toggle) + My Favorites section.
+    Feature 5: EV/accessible filters  already implemented, preserved as-is.
     Feature 6: Sort dropdown (Nearest first / Cheapest first).
     """
     token = st.session_state.get("token")
 
     st.markdown(
         '<div style="margin-bottom:20px;">'
-        '<h1 style="color:#ffffff;font-size:1.8rem;font-weight:800;margin:0;">🔍 Find Parking Locations</h1>'
+        '<h1 style="color:#ffffff;font-size:1.8rem;font-weight:800;margin:0;"><span class="material-symbols-rounded">search</span> Find Parking Locations</h1>'
         '<p style="color:#cbd5e1;font-size:0.95rem;margin:4px 0 0 0;">'
         'Select your destination area in Chennai to find nearby parking facilities sorted by proximity.'
         '</p></div>',
@@ -38,7 +38,7 @@ def render_parking_search():
     # Feature 4: My Favorites Section
     # =========================================================================
     if token and favorite_parking_ids:
-        with st.expander(f"⭐ My Favorites ({len(favorite_parking_ids)})", expanded=False):
+        with st.expander(f" My Favorites ({len(favorite_parking_ids)})", expanded=False):
             fav_list_res = api.get_favorites(token)
             if fav_list_res.get("success"):
                 fav_items = fav_list_res.get("data", [])
@@ -50,11 +50,11 @@ def render_parking_search():
                                 '<div style="background:rgba(245,158,11,0.12);'
                                 'border:1px solid rgba(245,158,11,0.4);border-radius:10px;'
                                 'padding:12px;margin-bottom:10px;text-align:center;">'
-                                '<div style="font-size:1.2rem;">⭐</div>'
+                                '<div style="font-size:1.2rem;"></div>'
                                 '<strong style="color:#ffffff;font-size:0.9rem;">{name}</strong>'
                                 '<div style="color:#cbd5e1;font-size:0.78rem;">{area}</div>'
                                 '<div style="color:#fbbf24;font-size:0.85rem;font-weight:700;">'
-                                '₹{fee:.2f}/hr</div>'
+                                '{fee:.2f}/hr</div>'
                                 '</div>'
                             ).format(
                                 name=fav.get("parking_name", ""),
@@ -63,7 +63,7 @@ def render_parking_search():
                             )
                             st.markdown(fav_html, unsafe_allow_html=True)
                             if st.button(
-                                "Remove ⭐",
+                                "Remove ",
                                 key=f"fav_remove_top_{fav.get('parking_id')}",
                                 use_container_width=True
                             ):
@@ -90,7 +90,7 @@ def render_parking_search():
 
         with f_col1:
             selected_area = st.selectbox(
-                "📍 Destination Area / Locality",
+                " Destination Area / Locality",
                 options=supported_areas,
                 index=1 if len(supported_areas) > 1 else 0,
                 help="Choose an area to calculate distances to nearby parking lots",
@@ -99,18 +99,18 @@ def render_parking_search():
 
         with f_col2:
             st.markdown("<div style='height:28px;'></div>", unsafe_allow_html=True)
-            ev_filter = st.checkbox("⚡ EV Charging", value=False, key="filter_ev")
+            ev_filter = st.checkbox(" EV Charging", value=False, key="filter_ev")
 
         with f_col3:
             st.markdown("<div style='height:28px;'></div>", unsafe_allow_html=True)
-            acc_filter = st.checkbox("♿ Accessible", value=False, key="filter_acc")
+            acc_filter = st.checkbox(" Accessible", value=False, key="filter_acc")
 
         with f_col4:
             # Feature 6: Sort dropdown
             sort_options = {
-                "📍 Nearest first": "nearest",
-                "💰 Cheapest first": "fee_asc",
-                "💸 Most expensive first": "fee_desc",
+                " Nearest first": "nearest",
+                " Cheapest first": "fee_asc",
+                " Most expensive first": "fee_desc",
             }
             sort_label = st.selectbox(
                 "Sort by",
@@ -143,7 +143,7 @@ def render_parking_search():
     parking_list = search_res.get("data", [])
 
     if not parking_list:
-        st.warning("⚠️ No parking locations found matching your selected criteria. Try selecting 'All Areas' or clearing filters.")
+        st.warning(" No parking locations found matching your selected criteria. Try selecting 'All Areas' or clearing filters.")
         return
 
     st.markdown(
@@ -161,8 +161,8 @@ def render_parking_search():
         is_fav = p_id in favorite_parking_ids
 
         with st.expander(
-            f"{'⭐' if is_fav else '🏢'} {loc.get('parking_name')}  —  "
-            f"₹{loc.get('parking_fee', 0):.2f}/hr  •  {loc.get('available_slots', 0)} Available",
+            f"{'' if is_fav else ''} {loc.get('parking_name')}    "
+            f"{loc.get('parking_fee', 0):.2f}/hr    {loc.get('available_slots', 0)} Available",
             expanded=(len(parking_list) == 1)
         ):
             # Feature 4: Favorite toggle button at top of expander
@@ -171,7 +171,7 @@ def render_parking_search():
                 with fav_col:
                     if is_fav:
                         if st.button(
-                            "⭐ Saved",
+                            " Saved",
                             key=f"fav_btn_{p_id}",
                             help="Click to remove from favorites",
                             use_container_width=True
@@ -184,14 +184,14 @@ def render_parking_search():
                                 st.error(res.get("error", "Failed to remove."))
                     else:
                         if st.button(
-                            "☆ Save",
+                            " Save",
                             key=f"fav_btn_{p_id}",
                             help="Click to add to favorites",
                             use_container_width=True
                         ):
                             res = api.add_favorite(token, p_id)
                             if res.get("success"):
-                                st.success(f"⭐ {loc.get('parking_name')} added to favorites!")
+                                st.success(f" {loc.get('parking_name')} added to favorites!")
                                 st.rerun()
                             else:
                                 # Handle "already favorited" gracefully
@@ -208,10 +208,10 @@ def render_parking_search():
                 '<div style="color:#cbd5e1;font-size:0.88rem;margin-bottom:14px;'
                 'background:rgba(15,23,42,0.5);padding:8px 14px;border-radius:8px;'
                 'border:1px solid rgba(148,163,184,0.15);">'
-                '⏰ <strong>Operating Hours:</strong> '
+                ' <strong>Operating Hours:</strong> '
                 f'{loc.get("opening_time", "06:00:00")} - {loc.get("closing_time", "23:00:00")}'
                 ' &nbsp;|&nbsp; '
-                '🏷️ <strong>Status:</strong> '
+                ' <strong>Status:</strong> '
                 f'<span style="color:{"#34d399" if str(loc.get("status", "")).lower() == "active" or loc.get("is_active") is True else "#f59e0b"};font-weight:700;">'
                 f'{loc.get("status") if loc.get("status") is not None else ("active" if loc.get("is_active") is True else ("inactive" if loc.get("is_active") is False else "unknown"))}</span>'
                 '</div>'
@@ -221,7 +221,7 @@ def render_parking_search():
             # Slot Grid Viewer
             st.markdown(
                 "<h4 style='color:#ffffff;font-size:1.05rem;font-weight:700;margin:12px 0 10px 0;'>"
-                "🅿️ Parking Slot Availability Grid</h4>",
+                " Parking Slot Availability Grid</h4>",
                 unsafe_allow_html=True
             )
 
@@ -244,7 +244,7 @@ def render_parking_search():
                                 raw_status = slot.get("status")
                                 s_status = str(raw_status).lower() if raw_status is not None else "unknown"
 
-                                type_icon = "⚡" if s_type == "ev" else ("♿" if s_type == "accessible" else "🚗")
+                                type_icon = "" if s_type == "ev" else ("" if s_type == "accessible" else "")
                                 is_available = (s_status == "available")
 
                                 # Slot card styling
@@ -280,13 +280,13 @@ def render_parking_search():
 
                                 # Book button for available slots
                                 if is_available:
-                                    if st.button(f"Book {s_num}", key=f"btn_book_p{p_id}_s{s_id}", use_container_width=True, type="primary"):
+                                    if st.button(f":material/event_available: Book {s_num}", key=f"btn_book_p{p_id}_s{s_id}", use_container_width=True, type="primary"):
                                         st.session_state["selected_parking"] = loc
                                         st.session_state["selected_slot"] = slot
                                         st.session_state["active_page"] = "booking"
                                         st.rerun()
                                 else:
-                                    st.button(f"Unavailable", key=f"btn_unavail_p{p_id}_s{s_id}", use_container_width=True, disabled=True)
+                                    st.button(":material/block: Unavailable", key=f"btn_unavail_p{p_id}_s{s_id}", use_container_width=True, disabled=True)
                 else:
                     st.info("No slots registered for this facility.")
             else:

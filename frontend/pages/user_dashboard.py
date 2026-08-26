@@ -29,7 +29,8 @@ def render_user_dashboard():
         'flex-wrap:wrap;gap:14px;margin-bottom:22px;">'
         '<div>'
         '<h1 style="color:#ffffff;font-size:1.9rem;font-weight:800;margin:0;">'
-        f'Welcome back, {user.get("name", "Driver")}! 👋'
+        '<span class="material-symbols-rounded">waving_hand</span> '
+        f'Welcome back, {user.get("name", "Driver")}! '
         '</h1>'
         '<p style="color:#cbd5e1;font-size:0.95rem;margin:6px 0 0 0;">'
         'Find, reserve, and manage your parking sessions across Chennai with real-time slot tracking.'
@@ -48,7 +49,7 @@ def render_user_dashboard():
     # =========================================================================
     refresh_col, _ = st.columns([1.2, 4.8])
     with refresh_col:
-        if st.button("🔄 Refresh Data", key="btn_dash_refresh", use_container_width=True):
+        if st.button(":material/refresh: Refresh Data", key="btn_dash_refresh", use_container_width=True):
             st.rerun()
 
     # Fetch fresh dashboard data from FastAPI
@@ -67,28 +68,28 @@ def render_user_dashboard():
         with st.spinner("Processing check-in..."):
             res = api.check_in(token, booking_id)
             if res.get("success"):
-                st.success("✅ Check-in successful! Your slot is now marked as Occupied.")
+                st.success(" Check-in successful! Your slot is now marked as Occupied.")
                 st.rerun()
             else:
-                st.error(f"❌ Check-in failed: {res.get('error')}")
+                st.error(f" Check-in failed: {res.get('error')}")
 
     def handle_checkout(booking_id: int):
         with st.spinner("Processing check-out..."):
             res = api.check_out(token, booking_id=booking_id)
             if res.get("success"):
-                st.success("🎉 Check-out complete! Thank you for using Smart Parking.")
+                st.success(" Check-out complete! Thank you for using Smart Parking.")
                 st.rerun()
             else:
-                st.error(f"❌ Check-out failed: {res.get('error')}")
+                st.error(f" Check-out failed: {res.get('error')}")
 
     def handle_cancel(booking_id: int):
         with st.spinner("Cancelling reservation..."):
             res = api.cancel_booking(token, booking_id)
             if res.get("success"):
-                st.success("✅ Reservation cancelled and slot released.")
+                st.success(" Reservation cancelled and slot released.")
                 st.rerun()
             else:
-                st.error(f"❌ Cancellation failed: {res.get('error')}")
+                st.error(f" Cancellation failed: {res.get('error')}")
 
     # =========================================================================
     # High-contrast KPI cards
@@ -100,7 +101,7 @@ def render_user_dashboard():
             title="Nearby Parking",
             value=stats.get("nearby_parking_count", 0),
             subtitle="Active facilities in Chennai",
-            icon="🏢",
+            icon="local_parking",
             theme="blue",
         )
 
@@ -109,7 +110,7 @@ def render_user_dashboard():
             title="Available Slots",
             value=stats.get("available_slots_count", 0),
             subtitle="Ready for reservation now",
-            icon="🅿️",
+            icon="directions_car",
             theme="green",
         )
 
@@ -118,7 +119,7 @@ def render_user_dashboard():
             title="Active Bookings",
             value=stats.get("active_bookings_count", 0),
             subtitle="Reserved & active sessions",
-            icon="🎫",
+            icon="confirmation_number",
             theme="amber",
         )
 
@@ -127,20 +128,20 @@ def render_user_dashboard():
     # =========================================================================
     st.markdown(
         "<h4 style='color:#f1f5f9;font-size:1.05rem;font-weight:700;margin:18px 0 10px 0;'>"
-        "⚡ Quick Actions</h4>",
+        "<span class='material-symbols-rounded'>bolt</span> Quick Actions</h4>",
         unsafe_allow_html=True
     )
     qa1, qa2, qa3 = st.columns(3)
     with qa1:
-        if st.button("📍 Book New Slot", key="btn_dash_find_parking", use_container_width=True, type="primary"):
+        if st.button(":material/add_circle: Book New Slot", key="btn_dash_find_parking", use_container_width=True, type="primary"):
             st.session_state["active_page"] = "search"
             st.rerun()
     with qa2:
-        if st.button("📅 View My Bookings", key="btn_dash_my_bookings", use_container_width=True):
+        if st.button(":material/calendar_month: View My Bookings", key="btn_dash_my_bookings", use_container_width=True):
             st.session_state["active_page"] = "my_bookings"
             st.rerun()
     with qa3:
-        if st.button("👤 View My Profile", key="btn_dash_profile", use_container_width=True):
+        if st.button(":material/person: View My Profile", key="btn_dash_profile", use_container_width=True):
             st.session_state["active_page"] = "profile"
             st.rerun()
 
@@ -151,7 +152,7 @@ def render_user_dashboard():
     # =========================================================================
     st.markdown(
         "<h3 style='color:#ffffff;font-size:1.3rem;font-weight:800;margin:22px 0 12px 0;'>"
-        "🚗 Active Parking Session</h3>",
+        "<span class='material-symbols-rounded'>local_parking</span> Active Parking Session</h3>",
         unsafe_allow_html=True
     )
 
@@ -161,7 +162,7 @@ def render_user_dashboard():
             st.markdown(
                 '<div style="background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.4);'
                 'border-radius:8px;padding:8px 14px;margin-bottom:10px;color:#93c5fd;'
-                'font-size:0.9rem;font-weight:600;">⚡ Check-in Active — You are currently parked. '
+                'font-size:0.9rem;font-weight:600;"> Check-in Active  You are currently parked. '
                 'Use the Check-out button when you are ready to leave.</div>',
                 unsafe_allow_html=True
             )
@@ -169,29 +170,30 @@ def render_user_dashboard():
             active_booking,
             on_checkin_callback=handle_checkin,
             on_checkout_callback=handle_checkout,
-            on_cancel_callback=handle_cancel
+            on_cancel_callback=handle_cancel,
+            render_context="dashboard_highlight",
         )
     else:
         st.markdown(
             '<div style="background:rgba(30,41,59,0.5);border:1px dashed rgba(148,163,184,0.3);'
             'border-radius:12px;padding:26px;text-align:center;margin-bottom:20px;">'
-            '<span style="font-size:2.2rem;">🏖️</span>'
+            '<span class="material-symbols-rounded" style="font-size:2.2rem;">event_busy</span>'
             '<h4 style="color:#ffffff;margin:8px 0 4px 0;font-weight:700;">No Active Reservations</h4>'
             '<p style="color:#cbd5e1;font-size:0.9rem;margin:0 0 14px 0;">'
-            'No bookings yet — search parking now to reserve your spot instantly.'
+            'No bookings yet  search parking now to reserve your spot instantly.'
             '</p></div>',
             unsafe_allow_html=True
         )
-        if st.button("📍 Search Parking Now", key="btn_dash_empty_search", type="primary"):
+        if st.button(":material/search: Search Parking Now", key="btn_dash_empty_search", type="primary"):
             st.session_state["active_page"] = "search"
             st.rerun()
 
     # =========================================================================
-    # Feature 3: Recent Bookings — 2-column layout + color-coded status badges
+    # Feature 3: Recent Bookings  2-column layout + color-coded status badges
     # =========================================================================
     st.markdown(
         "<h3 style='color:#ffffff;font-size:1.3rem;font-weight:800;margin:25px 0 12px 0;'>"
-        "📜 Recent Bookings</h3>",
+        "<span class='material-symbols-rounded'>calendar_month</span> Recent Bookings</h3>",
         unsafe_allow_html=True
     )
 
@@ -200,10 +202,10 @@ def render_user_dashboard():
         def _status_badge(status: str) -> str:
             s = status.lower()
             cfg = {
-                "reserved":  ("#34d399", "rgba(16,185,129,0.2)", "✅ Confirmed"),
-                "active":    ("#60a5fa", "rgba(59,130,246,0.2)", "⚡ Active"),
-                "completed": ("#fbbf24", "rgba(245,158,11,0.2)", "🟠 Completed"),
-                "cancelled": ("#f87171", "rgba(239,68,68,0.2)", "❌ Cancelled"),
+                "reserved":  ("#34d399", "rgba(16,185,129,0.2)", " Confirmed"),
+                "active":    ("#60a5fa", "rgba(59,130,246,0.2)", " Active"),
+                "completed": ("#fbbf24", "rgba(245,158,11,0.2)", " Completed"),
+                "cancelled": ("#f87171", "rgba(239,68,68,0.2)", " Cancelled"),
             }
             color, bg, label = cfg.get(s, ("#94a3b8", "rgba(148,163,184,0.2)", status.capitalize()))
             return (
@@ -237,7 +239,7 @@ def render_user_dashboard():
                         f'{b.get("parking_name", "Parking Facility")}</span>'
                         f'<br><span style="color:#cbd5e1;font-size:0.82rem;">'
                         f'Slot <strong style="color:#60a5fa;">{b.get("slot_number","N/A")}</strong>'
-                        f' • {format_dt(b.get("start_time"))}</span>'
+                        f'  {format_dt(b.get("start_time"))}</span>'
                         f'</div>'
                         f'<div>{badge_html}</div>'
                         f'</div></div>'
@@ -249,20 +251,21 @@ def render_user_dashboard():
                             b,
                             on_checkin_callback=handle_checkin,
                             on_checkout_callback=handle_checkout,
-                            on_cancel_callback=handle_cancel
+                            on_cancel_callback=handle_cancel,
+                            render_context="dashboard_recent",
                         )
     else:
         # Feature 3: Empty-state for no bookings at all
         st.markdown(
             '<div style="background:rgba(30,41,59,0.5);border:1px dashed rgba(148,163,184,0.3);'
             'border-radius:12px;padding:22px;text-align:center;margin-bottom:20px;">'
-            '<span style="font-size:1.8rem;">📭</span>'
+            '<span class="material-symbols-rounded" style="font-size:1.8rem;">calendar_month</span>'
             '<h4 style="color:#ffffff;margin:8px 0 4px 0;font-weight:700;">No bookings yet</h4>'
             '<p style="color:#cbd5e1;font-size:0.9rem;margin:0 0 14px 0;">'
             'You haven\'t made any bookings yet. Search for parking now to get started!'
             '</p></div>',
             unsafe_allow_html=True
         )
-        if st.button("📍 Search Parking Now", key="btn_dash_no_bookings_search", type="primary"):
+        if st.button(":material/search: Search Parking Now", key="btn_dash_no_bookings_search", type="primary"):
             st.session_state["active_page"] = "search"
             st.rerun()

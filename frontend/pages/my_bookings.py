@@ -16,17 +16,17 @@ def render_my_bookings():
         st.markdown(
             '<div style="background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.4);'
             'border-left:4px solid #f59e0b;border-radius:10px;padding:14px 18px;color:#fde68a;'
-            'font-weight:600;margin-bottom:16px;">⚠️ Please sign in to view your bookings.</div>',
+            'font-weight:600;margin-bottom:16px;"> Please sign in to view your bookings.</div>',
             unsafe_allow_html=True
         )
         st.session_state["active_page"] = "login"
         st.rerun()
 
-    # ── Header ──────────────────────────────────────────────────────────────
+    # Header
     header_html = (
         '<div style="margin-bottom:20px;">'
         '<div style="display:flex;align-items:center;gap:12px;">'
-        '<h1 style="color:#f8fafc;font-size:1.9rem;font-weight:800;margin:0;">📅 My Parking Bookings</h1>'
+        '<h1 style="color:#f8fafc;font-size:1.9rem;font-weight:800;margin:0;"><span class="material-symbols-rounded">calendar_month</span> My Parking Bookings</h1>'
         '</div>'
         '<p style="color:#94a3b8;font-size:0.95rem;margin:6px 0 0 0;">'
         'Track your active reservations, perform Check-in / Check-out, and view your complete parking history.'
@@ -34,35 +34,35 @@ def render_my_bookings():
     )
     st.markdown(header_html, unsafe_allow_html=True)
 
-    # ── Action Handlers ──────────────────────────────────────────────────────
+    # Action Handlers
     def handle_checkin(booking_id: int):
         with st.spinner("Checking in..."):
             res = api.check_in(token, booking_id)
             if res.get("success"):
-                st.success("✅ Check-in successful! Your session is now active.")
+                st.success(" Check-in successful! Your session is now active.")
                 st.rerun()
             else:
-                st.error(f"❌ Check-in failed: {res.get('error')}")
+                st.error(f" Check-in failed: {res.get('error')}")
 
     def handle_checkout(booking_id: int):
         with st.spinner("Checking out..."):
             res = api.check_out(token, booking_id=booking_id)
             if res.get("success"):
-                st.success("🎉 Check-out complete! Your parking slot has been released.")
+                st.success(" Check-out complete! Your parking slot has been released.")
                 st.rerun()
             else:
-                st.error(f"❌ Check-out failed: {res.get('error')}")
+                st.error(f" Check-out failed: {res.get('error')}")
 
     def handle_cancel(booking_id: int):
         with st.spinner("Cancelling reservation..."):
             res = api.cancel_booking(token, booking_id)
             if res.get("success"):
-                st.success("✅ Reservation cancelled and slot returned to available.")
+                st.success(" Reservation cancelled and slot returned to available.")
                 st.rerun()
             else:
-                st.error(f"❌ Cancellation failed: {res.get('error')}")
+                st.error(f" Cancellation failed: {res.get('error')}")
 
-    # ── Fetch bookings ───────────────────────────────────────────────────────
+    # Fetch bookings
     with st.spinner("Loading bookings..."):
         b_res = api.get_my_bookings(token)
         s_res = api.get_my_sessions(token)
@@ -73,15 +73,15 @@ def render_my_bookings():
     active_bookings = [b for b in bookings if str(b.get("status", "")).lower() in ["reserved", "active"]]
     past_bookings = [b for b in bookings if str(b.get("status", "")).lower() in ["completed", "cancelled"]]
 
-    # ── Tabbed Interface ─────────────────────────────────────────────────────
+    # Tabbed Interface
     tab_active, tab_history, tab_sessions = st.tabs([
-        f"⚡ Active & Upcoming ({len(active_bookings)})",
-        f"📜 Booking History ({len(past_bookings)})",
-        f"🚗 Parking Sessions Log ({len(sessions)})"
+        f":material/event_available: Active & Upcoming ({len(active_bookings)})",
+        f":material/history: Booking History ({len(past_bookings)})",
+        f":material/directions_car: Parking Sessions Log ({len(sessions)})"
     ])
 
     # =========================================================================
-    # Tab 1: Active & Upcoming — Feature 1: session reminder at top
+    # Tab 1: Active & Upcoming  Feature 1: session reminder at top
     # =========================================================================
     with tab_active:
         st.markdown("<div style='height:10px;'></div>", unsafe_allow_html=True)
@@ -95,7 +95,8 @@ def render_my_bookings():
                     b,
                     on_checkin_callback=handle_checkin,
                     on_checkout_callback=handle_checkout,
-                    on_cancel_callback=handle_cancel
+                    on_cancel_callback=handle_cancel,
+                    render_context="my_bookings_active",
                 )
         else:
             # Styled empty state
@@ -109,7 +110,7 @@ def render_my_bookings():
                     text-align: center;
                     margin: 12px 0;
                 ">
-                    <div style="font-size: 2.5rem; margin-bottom: 12px;">📭</div>
+                    <div class="material-symbols-rounded" style="font-size: 2.5rem; margin-bottom: 12px;">event_busy</div>
                     <div style="color: #f1f5f9; font-size: 1.05rem; font-weight: 700; margin-bottom: 6px;">
                         No Active or Upcoming Reservations
                     </div>
@@ -121,7 +122,7 @@ def render_my_bookings():
                 unsafe_allow_html=True
             )
             st.markdown("<div style='height:10px;'></div>", unsafe_allow_html=True)
-            if st.button("📍 Find a Parking Space Now", key="myb_btn_find_parking", type="primary", use_container_width=False):
+            if st.button(":material/search: Find a Parking Space Now", key="myb_btn_find_parking", type="primary", use_container_width=False):
                 st.session_state["active_page"] = "search"
                 st.rerun()
 
@@ -132,7 +133,7 @@ def render_my_bookings():
         st.markdown("<div style='height:10px;'></div>", unsafe_allow_html=True)
         if past_bookings:
             for b in past_bookings:
-                render_booking_card(b)
+                render_booking_card(b, render_context="my_bookings_history")
         else:
             st.markdown(
                 """
@@ -144,7 +145,7 @@ def render_my_bookings():
                     text-align: center;
                     margin: 12px 0;
                 ">
-                    <div style="font-size: 2.5rem; margin-bottom: 12px;">📂</div>
+                    <div class="material-symbols-rounded" style="font-size: 2.5rem; margin-bottom: 12px;">history</div>
                     <div style="color: #f1f5f9; font-size: 1.05rem; font-weight: 700; margin-bottom: 6px;">
                         No Booking History Yet
                     </div>

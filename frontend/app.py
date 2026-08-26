@@ -22,7 +22,6 @@ from frontend.pages.admin_dashboard import render_admin_dashboard
 # ==============================================================================
 st.set_page_config(
     page_title="Smart Parking Finder & Management",
-    page_icon="🅿️",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -34,6 +33,16 @@ CUSTOM_CSS = """
 <style>
     /* Google Fonts & Base Theme */
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400,0,0');
+
+    .material-symbols-rounded {
+        font-family: 'Material Symbols Rounded';
+        font-weight: normal;
+        font-style: normal;
+        line-height: 1;
+        vertical-align: middle;
+        white-space: nowrap;
+    }
 
     html, body, [class*="css"] {
         font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -136,16 +145,30 @@ CUSTOM_CSS = """
         background: rgba(30, 41, 59, 0.8) !important;
         border: 1px solid rgba(148, 163, 184, 0.22) !important;
         border-radius: 12px !important;
-        padding: 14px 18px !important;
+        min-height: 144px !important;
+        height: 144px !important;
+        box-sizing: border-box !important;
+        padding: 16px 18px !important;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
     }
 
     [data-testid="stMetricLabel"] {
         color: #cbd5e1 !important;
         font-weight: 700 !important;
-        font-size: 0.85rem !important;
+        font-size: 0.76rem !important;
         text-transform: uppercase !important;
         letter-spacing: 0.5px !important;
+        line-height: 1.25 !important;
+        white-space: normal !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+        min-height: 38px !important;
+    }
+
+    [data-testid="stMetricLabel"] > div {
+        white-space: normal !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
     }
 
     [data-testid="stMetricValue"] {

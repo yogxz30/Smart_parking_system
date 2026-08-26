@@ -23,7 +23,7 @@ def render_booking_flow():
 
     st.markdown(
         '<div style="margin-bottom:20px;">'
-        '<h1 style="color:#ffffff;font-size:1.8rem;font-weight:800;margin:0;">🎫 Reserve Parking Slot</h1>'
+        '<h1 style="color:#ffffff;font-size:1.8rem;font-weight:800;margin:0;"><span class="material-symbols-rounded">directions_car</span> Reserve Parking Slot</h1>'
         '<p style="color:#cbd5e1;font-size:0.95rem;margin:4px 0 0 0;">'
         'Review slot details, choose your parking duration, select payment method, and confirm your reservation.'
         '</p></div>',
@@ -31,8 +31,8 @@ def render_booking_flow():
     )
 
     if not parking or not slot:
-        st.warning("⚠️ No parking slot currently selected. Please choose a parking facility and available slot first.")
-        if st.button("📍 Browse Parking Locations", key="btn_book_browse", type="primary"):
+        st.warning(" No parking slot currently selected. Please choose a parking facility and available slot first.")
+        if st.button(":material/search: Browse Parking Locations", key="btn_book_browse", type="primary"):
             st.session_state["active_page"] = "search"
             st.rerun()
         return
@@ -57,7 +57,7 @@ def render_booking_flow():
             '<h3 style="color:#ffffff;font-size:1.25rem;font-weight:700;margin:0 0 8px 0;">'
             '{parking_name}</h3>'
             '<p style="color:#cbd5e1;font-size:0.88rem;margin:0 0 14px 0;">'
-            '📍 {address}</p>'
+            ' {address}</p>'
             '<hr style="border:0;border-top:1px solid rgba(148,163,184,0.2);margin:12px 0;">'
             '<div style="display:flex;justify-content:space-between;margin-bottom:8px;">'
             '<span style="color:#94a3b8;font-size:0.88rem;font-weight:600;">Slot Number:</span>'
@@ -69,7 +69,7 @@ def render_booking_flow():
             '</div>'
             '<div style="display:flex;justify-content:space-between;margin-bottom:6px;">'
             '<span style="color:#94a3b8;font-size:0.88rem;font-weight:600;">Rate:</span>'
-            '<strong style="color:#60a5fa;font-size:1.05rem;">₹{parking_fee:.2f} / hr</strong>'
+            '<strong style="color:#60a5fa;font-size:1.05rem;">{parking_fee:.2f} / hr</strong>'
             '</div></div>'
         ).format(
             parking_name=parking.get("parking_name", ""),
@@ -80,7 +80,7 @@ def render_booking_flow():
         )
         st.markdown(facility_card_html, unsafe_allow_html=True)
 
-        if st.button("⬅️ Choose Different Slot", key="btn_book_change_slot", use_container_width=True):
+        if st.button(":material/swap_horiz: Choose Different Slot", key="btn_book_change_slot", use_container_width=True):
             st.session_state["selected_parking"] = None
             st.session_state["selected_slot"] = None
             st.session_state["active_page"] = "search"
@@ -91,7 +91,7 @@ def render_booking_flow():
             '<div style="background:rgba(15,23,42,0.7);border:1px solid rgba(148,163,184,0.2);'
             'border-radius:12px;padding:16px 20px;margin-bottom:12px;">'
             '<h4 style="color:#ffffff;font-size:1.1rem;font-weight:700;margin:0;">'
-            '⏰ Parking Schedule & Duration</h4></div>',
+            '<span class="material-symbols-rounded">schedule</span> Parking Schedule & Duration</h4></div>',
             unsafe_allow_html=True
         )
 
@@ -138,7 +138,7 @@ def render_booking_flow():
             '<hr style="border:0;border-top:1px solid rgba(148,163,184,0.25);margin:8px 0;">'
             '<div style="display:flex;justify-content:space-between;align-items:center;">'
             '<span style="color:#ffffff;font-weight:700;font-size:1.05rem;">Total Parking Fee:</span>'
-            '<span style="color:#34d399;font-weight:800;font-size:1.4rem;">₹{fee:.2f}</span>'
+            '<span style="color:#34d399;font-weight:800;font-size:1.4rem;">{fee:.2f}</span>'
             '</div></div>'
         ).format(
             start=format_dt(start_datetime),
@@ -149,13 +149,13 @@ def render_booking_flow():
         st.markdown(summary_html, unsafe_allow_html=True)
 
         # =====================================================================
-        # Feature 2: Payment Method Step (frontend-only — no DB column)
+        # Feature 2: Payment Method Step (frontend-only  no DB column)
         # =====================================================================
         st.markdown(
             '<div style="background:rgba(15,23,42,0.7);border:1px solid rgba(148,163,184,0.2);'
             'border-radius:12px;padding:14px 20px;margin-bottom:14px;">'
             '<h4 style="color:#ffffff;font-size:1.05rem;font-weight:700;margin:0 0 8px 0;">'
-            '💳 Payment Method</h4>'
+            '<span class="material-symbols-rounded">payments</span> Payment Method</h4>'
             '<p style="color:#cbd5e1;font-size:0.85rem;margin:0;">'
             'Select how you will pay for this parking session.</p>'
             '</div>',
@@ -164,7 +164,7 @@ def render_booking_flow():
 
         payment_method = st.radio(
             "Select Payment Method",
-            options=["💵 Cash"],
+            options=["Cash"],
             index=0,
             key="book_payment_method",
             help="Pay the parking fee physically at the facility counter or booth.",
@@ -174,14 +174,14 @@ def render_booking_flow():
         st.markdown(
             '<div style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.35);'
             'border-radius:8px;padding:10px 14px;margin-bottom:14px;color:#6ee7b7;font-size:0.88rem;">'
-            '💵 <strong>Cash Payment:</strong> Please pay the parking fee physically at the parking '
+            '<span class="material-symbols-rounded">payments</span> <strong>Cash Payment:</strong> Please pay the parking fee physically at the parking '
             'facility counter or booth upon arrival.'
             '</div>',
             unsafe_allow_html=True
         )
 
         # Confirm Reservation Button
-        if st.button("🔒 Confirm & Reserve Slot", key="btn_book_submit", use_container_width=True, type="primary"):
+        if st.button(":material/check_circle: Confirm & Reserve Slot", key="btn_book_submit", use_container_width=True, type="primary"):
             with st.spinner("Submitting your reservation to backend..."):
                 start_iso = start_datetime.strftime("%Y-%m-%dT%H:%M:%S")
                 res = api.create_booking(
@@ -206,14 +206,14 @@ def render_booking_flow():
                         "duration_hours": duration_hours,
                         "total_fee": total_fee,
                         "payment_method": "Cash",
-                        "created_at": datetime.now().strftime("%b %d, %Y • %I:%M %p")
+                        "created_at": datetime.now().strftime("%b %d, %Y  %I:%M %p")
                     }
                     st.session_state["selected_parking"] = None
                     st.session_state["selected_slot"] = None
                     st.balloons()
                     st.rerun()
                 else:
-                    st.error(f"❌ Reservation failed: {res.get('error')}")
+                    st.error(f" Reservation failed: {res.get('error')}")
 
 
 def _render_booking_receipt(receipt: dict):
@@ -224,7 +224,7 @@ def _render_booking_receipt(receipt: dict):
     st.markdown(
         '<div style="margin-bottom:20px;">'
         '<h1 style="color:#ffffff;font-size:1.8rem;font-weight:800;margin:0;">'
-        '🎉 Booking Confirmed!</h1>'
+        '<span class="material-symbols-rounded">check_circle</span> Booking Confirmed!</h1>'
         '<p style="color:#cbd5e1;font-size:0.95rem;margin:4px 0 0 0;">'
         'Your parking slot has been successfully reserved. Here is your booking summary.'
         '</p></div>',
@@ -232,14 +232,14 @@ def _render_booking_receipt(receipt: dict):
     )
 
     # Success banner
-    st.success(f"✅ Booking #{receipt.get('booking_id')} confirmed! Your slot is reserved.")
+    st.success(f" Booking #{receipt.get('booking_id')} confirmed! Your slot is reserved.")
 
     # Receipt Card
     receipt_html = (
         '<div style="background:rgba(30,41,59,0.95);border:1px solid rgba(59,130,246,0.5);'
         'border-left:5px solid #3b82f6;border-radius:12px;padding:24px;margin:16px 0;">'
         '<div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;">'
-        '<span style="font-size:1.4rem;">🧾</span>'
+        '<span class="material-symbols-rounded" style="font-size:1.4rem;">receipt_long</span>'
         '<h3 style="color:#ffffff;margin:0;font-size:1.25rem;font-weight:800;">Booking Receipt</h3>'
         '<span style="background:rgba(99,102,241,0.25);color:#c7d2fe;border:1px solid rgba(99,102,241,0.5);'
         'padding:2px 10px;border-radius:6px;font-size:0.8rem;font-weight:700;">'
@@ -267,16 +267,16 @@ def _render_booking_receipt(receipt: dict):
         '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">'
         '<div>'
         '<p style="color:#94a3b8;font-size:0.8rem;font-weight:600;margin:0 0 2px;">Payment Method</p>'
-        '<strong style="color:#fbbf24;font-size:1.05rem;">💵 {payment_method}</strong>'
+        '<strong style="color:#fbbf24;font-size:1.05rem;"> {payment_method}</strong>'
         '</div>'
         '<div style="text-align:right;">'
         '<p style="color:#94a3b8;font-size:0.8rem;font-weight:600;margin:0 0 2px;">Total Fee</p>'
-        '<strong style="color:#34d399;font-size:1.6rem;font-weight:800;">₹{total_fee:.2f}</strong>'
+        '<strong style="color:#34d399;font-size:1.6rem;font-weight:800;">{total_fee:.2f}</strong>'
         '</div>'
         '</div>'
         '<div style="background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.4);'
         'border-radius:8px;padding:10px 14px;margin-top:14px;color:#fde68a;font-size:0.88rem;">'
-        '💵 <strong>Payment Instruction:</strong> Please pay ₹{total_fee:.2f} in cash at the '
+        ' <strong>Payment Instruction:</strong> Please pay {total_fee:.2f} in cash at the '
         'parking facility counter or booth upon arrival. Keep this receipt as your booking proof.'
         '</div>'
         '</div>'
@@ -287,7 +287,7 @@ def _render_booking_receipt(receipt: dict):
     # Feature 7: Download as text button
     txt_content = _generate_receipt_txt(receipt)
     st.download_button(
-        label="📥 Download Booking Receipt (.txt)",
+        label=" Download Booking Receipt (.txt)",
         data=txt_content,
         file_name=f"booking_receipt_{receipt.get('booking_id', 'unknown')}.txt",
         mime="text/plain",
@@ -298,12 +298,12 @@ def _render_booking_receipt(receipt: dict):
     # Navigation buttons
     nav_col1, nav_col2 = st.columns(2)
     with nav_col1:
-        if st.button("📅 View My Bookings", key="btn_receipt_my_bookings", use_container_width=True, type="primary"):
+        if st.button(":material/calendar_month: View My Bookings", key="btn_receipt_my_bookings", use_container_width=True, type="primary"):
             st.session_state.pop("last_booking_receipt", None)
             st.session_state["active_page"] = "my_bookings"
             st.rerun()
     with nav_col2:
-        if st.button("🏠 Go to Dashboard", key="btn_receipt_dashboard", use_container_width=True):
+        if st.button(":material/dashboard: Go to Dashboard", key="btn_receipt_dashboard", use_container_width=True):
             st.session_state.pop("last_booking_receipt", None)
             st.session_state["active_page"] = "dashboard"
             st.rerun()

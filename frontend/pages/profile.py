@@ -7,7 +7,7 @@ from frontend.components.tables import format_dt
 def render_user_profile():
     """
     Renders the User Profile and Account Information view.
-    BUG FIX: Raw HTML no longer shown as literal text — all st.markdown calls
+    BUG FIX: Raw HTML no longer shown as literal text  all st.markdown calls
     use unsafe_allow_html=True and HTML is built with clean string formatting
     (no textwrap.dedent on f-strings, which caused newline-prefixed HTML
     to be treated as code blocks in some Streamlit versions).
@@ -33,11 +33,11 @@ def render_user_profile():
     sessions = sess_res.get("data", []) if sess_res.get("success") else []
 
     # =========================================================================
-    # Header — BUG FIX: use direct string (no textwrap.dedent on f-string)
+    # Header  BUG FIX: use direct string (no textwrap.dedent on f-string)
     # =========================================================================
     st.markdown(
         '<div style="margin-bottom:20px;">'
-        '<h1 style="color:#ffffff;font-size:1.8rem;font-weight:800;margin:0;">👤 User Profile</h1>'
+        '<h1 style="color:#ffffff;font-size:1.8rem;font-weight:800;margin:0;"><span class="material-symbols-rounded">person</span> User Profile</h1>'
         '<p style="color:#cbd5e1;font-size:0.95rem;margin:4px 0 0 0;">'
         'Manage your account information and view your activity summary.'
         '</p></div>',
@@ -108,7 +108,7 @@ def render_user_profile():
             '<div style="background:rgba(15,23,42,0.85);border:1px solid rgba(148,163,184,0.25);'
             'border-radius:12px;padding:24px;text-align:center;margin-bottom:20px;box-shadow:0 4px 14px rgba(0,0,0,0.2);">'
             '<h3 style="color:#ffffff;font-size:1.2rem;font-weight:800;margin:0 0 16px 0;">'
-            '📊 Activity Overview</h3>'
+            '<span class="material-symbols-rounded">insights</span> Activity Overview</h3>'
             '<div style="background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.4);'
             'border-radius:10px;padding:16px;margin-bottom:14px;">'
             '<p style="color:#cbd5e1;font-size:0.85rem;font-weight:600;margin:0 0 4px 0;">'
@@ -124,7 +124,7 @@ def render_user_profile():
         ).format(total_bookings=len(bookings), total_sessions=len(sessions))
         st.markdown(activity_card_html, unsafe_allow_html=True)
 
-        if st.button("🚪 Sign Out", key="btn_profile_signout", use_container_width=True, type="secondary"):
+        if st.button(":material/logout: Sign Out", key="btn_profile_signout", use_container_width=True, type="secondary"):
             st.session_state.clear()
             st.rerun()
 
@@ -133,7 +133,7 @@ def render_user_profile():
     # =========================================================================
     st.markdown(
         '<h3 style="color:#ffffff;font-size:1.3rem;font-weight:800;margin:28px 0 14px 0;">'
-        '✏️ Edit Profile</h3>',
+        '<span class="material-symbols-rounded">edit</span> Edit Profile</h3>',
         unsafe_allow_html=True
     )
 
@@ -160,7 +160,7 @@ def render_user_profile():
             )
 
         submitted_profile = st.form_submit_button(
-            "💾 Save Profile Changes", use_container_width=True, type="primary"
+            ":material/save: Save Profile Changes", use_container_width=True, type="primary"
         )
 
     if submitted_profile:
@@ -178,7 +178,7 @@ def render_user_profile():
 
         if errors:
             for e in errors:
-                st.error(f"❌ {e}")
+                st.error(f" {e}")
         else:
             with st.spinner("Saving profile..."):
                 res = api.update_profile(
@@ -187,7 +187,7 @@ def render_user_profile():
                     phone=phone_stripped if phone_stripped else None
                 )
             if res.get("success"):
-                st.success("✅ Profile updated successfully!")
+                st.success(" Profile updated successfully!")
                 # Update session state user info
                 updated_user = res.get("data", {})
                 if st.session_state.get("user"):
@@ -195,14 +195,14 @@ def render_user_profile():
                     st.session_state["user"]["phone"] = updated_user.get("phone", phone_stripped)
                 st.rerun()
             else:
-                st.error(f"❌ Update failed: {res.get('error')}")
+                st.error(f" Update failed: {res.get('error')}")
 
     # =========================================================================
     # Feature 8: Password Change Form
     # =========================================================================
     st.markdown(
         '<h3 style="color:#ffffff;font-size:1.3rem;font-weight:800;margin:28px 0 14px 0;">'
-        '🔐 Change Password</h3>',
+        '<span class="material-symbols-rounded">password</span> Change Password</h3>',
         unsafe_allow_html=True
     )
 
@@ -230,7 +230,7 @@ def render_user_profile():
             )
 
         submitted_pw = st.form_submit_button(
-            "🔑 Update Password", use_container_width=True, type="primary"
+            ":material/password: Update Password", use_container_width=True, type="primary"
         )
 
     if submitted_pw:
@@ -244,7 +244,7 @@ def render_user_profile():
 
         if pw_errors:
             for e in pw_errors:
-                st.error(f"❌ {e}")
+                st.error(f" {e}")
         else:
             with st.spinner("Updating password..."):
                 res = api.change_password(
@@ -254,6 +254,6 @@ def render_user_profile():
                     confirm_password=confirm_pw
                 )
             if res.get("success"):
-                st.success("✅ Password changed successfully! Please log in again with your new password.")
+                st.success(" Password changed successfully! Please log in again with your new password.")
             else:
-                st.error(f"❌ Password change failed: {res.get('error')}")
+                st.error(f" Password change failed: {res.get('error')}")
