@@ -5,14 +5,15 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 # Load environment variables from .env file
-load_dotenv()
+from pathlib import Path
+load_dotenv(dotenv_path=Path(__file__).resolve().parent / ".env", override=True)
 
 DB_HOST = os.getenv("DB_HOST", "localhost")
 DB_PORT = os.getenv("DB_PORT", "3306")
 DB_USER = os.getenv("DB_USER", "root")
 DB_PASSWORD = os.getenv("DB_PASSWORD", "")
 DB_NAME = os.getenv("DB_NAME", "smart_parking_db")
-
+print("DB password loaded:", bool(DB_PASSWORD), "| DB:", DB_NAME)
 # URL-encode password in case it contains special characters
 encoded_password = urllib.parse.quote_plus(DB_PASSWORD)
 
@@ -53,3 +54,11 @@ def get_db():
         yield db
     finally:
         db.close()
+if __name__ == "__main__":
+    from sqlalchemy import text
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        print("DB connected:", DATABASE_URL.split("@")[-1])
+    except Exception as e:
+        print("DB error:", e)
